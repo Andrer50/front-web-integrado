@@ -1,4 +1,4 @@
-import { Role, Status } from "@/core/shared";
+import { type Role, type Status } from "@/core/shared";
 
 export interface User {
   id: number;
