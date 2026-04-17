@@ -1,4 +1,3 @@
-import { getSession, signOut } from "next-auth/react";
 // lib/http-client.ts
 import axios, {
   AxiosInstance,
@@ -36,11 +35,7 @@ export class HttpClient {
   private token: string | null = null;
 
   private constructor(baseURL: string) {
-    this.axiosInstance = axios.create({
-      baseURL,
-      // timeout: 30000,
-    });
-
+    this.axiosInstance = axios.create({ baseURL });
     this.setupInterceptors();
   }
 
@@ -54,89 +49,44 @@ export class HttpClient {
     return HttpClient.instances.get(name)!;
   }
 
-  private setupInterceptors(): void {
+  public setToken(token: string) {
+    this.token = token;
+  }
+
+  private setupInterceptors() {
     this.axiosInstance.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        // Nota el async
-        // 1. Si ya tenemos token manual, úsalo
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
-        // 2. Si NO tenemos token y estamos en el navegador, intenta leer la sesión de NextAuth
-        else if (typeof window !== "undefined") {
-          const session = await getSession();
-          if (session?.accessToken) {
-            // Opcional: guardarlo en this.token para futuras peticiones
-            this.token = session.accessToken;
-            config.headers.Authorization = `Bearer ${session.accessToken}`;
-          }
-        }
+
         return config;
       },
       (error: unknown) => Promise.reject(error),
     );
 
     this.axiosInstance.interceptors.response.use(
-      <T>(
-        response: AxiosResponse<ApiResponse<T>>,
-      ): AxiosResponse<ApiResponse<T>> => {
-        const data = response.data;
+      (response: AxiosResponse<ApiResponse<unknown>>) => {
+        const { data } = response;
 
-        // Si la respuesta es un Blob, retornamos directamente
-        if (data instanceof Blob) {
-          return response;
-        }
-
-        // Conversión segura para respuestas JSON esperadas
-        const { code, message } = data as unknown as ApiResponse<T>;
-
-        if (code && code !== "000") {
-          const businessError: BusinessError = Object.assign(
-            new Error(message || "Error en la operación"),
-            {
-              code,
-              isBusinessError: true as const,
-              data: response.data,
-            },
-          );
-          throw businessError;
+        if (data && typeof data === "object" && "code" in data) {
+          const apiData = data as ApiResponse<unknown>;
+          if (apiData.code !== "0000" && apiData.code !== "000") {
+            throw new BusinessError(
+              apiData.code,
+              apiData.message || "Error de negocio",
+            );
+          }
         }
 
         return response;
       },
-      (error: unknown): Promise<NetworkError> => {
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "response" in error
-        ) {
-          const err = error as {
-            response: {
-              status: number;
-              data?: {
-                message?: string;
-                data?: {
-                  currentTime?: string;
-                  openTime?: string;
-                  closeTime?: string;
-                  nextOpenTime?: string;
-                  message?: string;
-                };
-              };
-            };
-          };
-
-          if (err.response.status === 401) {
-            console.error("Token expirado o inválido");
-            if (typeof window !== "undefined") {
-              signOut({ callbackUrl: "/sign-in" });
-            }
-          }
-
+      async (error) => {
+        if (error.response) {
           return Promise.reject({
-            code: String(err.response.status),
-            message: err.response.data?.message ?? "Error de red",
-            status: err.response.status,
+            code: String(error.response.status),
+            message: error.response.data?.message ?? "Error de red",
+            status: error.response.status,
           });
         }
 
@@ -149,26 +99,14 @@ export class HttpClient {
     );
   }
 
-  public setToken(token: string | null): void {
-    this.token = token;
-  }
-
-  public clearToken(): void {
-    this.token = null;
-  }
-
-  public getToken(): string | null {
-    return this.token;
-  }
-
-  public get<T>(
+  public async get<T>(
     url: string,
     config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     return this.axiosInstance.get<T>(url, config);
   }
 
-  public post<T, D = unknown>(
+  public async post<T, D = unknown>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
@@ -176,7 +114,7 @@ export class HttpClient {
     return this.axiosInstance.post<T>(url, data, config);
   }
 
-  public put<T, D = unknown>(
+  public async put<T, D = unknown>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
@@ -184,7 +122,7 @@ export class HttpClient {
     return this.axiosInstance.put<T>(url, data, config);
   }
 
-  public patch<T, D = unknown>(
+  public async patch<T, D = unknown>(
     url: string,
     data?: D,
     config?: AxiosRequestConfig,
@@ -192,14 +130,16 @@ export class HttpClient {
     return this.axiosInstance.patch<T>(url, data, config);
   }
 
-  public delete<T, D = unknown>(
+  public async delete<T>(
     url: string,
-    data?: D,
     config?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
-    return this.axiosInstance.delete<T>(url, { ...config, data });
+    return this.axiosInstance.delete<T>(url, config);
   }
 }
+
+// Determinar baseURL dinámico
+const isServer = typeof window === "undefined";
 
 /**
  * Cliente HTTP para API principal
@@ -207,7 +147,21 @@ export class HttpClient {
  * Nota: baseURL vacío porque las rutas son manejadas por rewrites de Next.js
  * Ver next.config.js para la configuración de rewrites
  */
-export const apiClient = HttpClient.getInstance("", "main");
+export const apiClient = HttpClient.getInstance(
+  isServer ? process.env.BACKEND_URL || "" : "",
+  "main",
+);
+
+/**
+ * Cliente HTTP para API principal PUBLICO
+ *
+ * Nota: baseURL vacío porque las rutas son manejadas por rewrites de Next.js
+ * Ver next.config.js para la configuración de rewrites
+ */
+export const publicClient = HttpClient.getInstance(
+  isServer ? process.env.BACKEND_URL || "" : "",
+  "public",
+);
 
 /**
  * Cliente HTTP para autenticación
@@ -215,7 +169,10 @@ export const apiClient = HttpClient.getInstance("", "main");
  * Nota: baseURL vacío porque las rutas son manejadas por rewrites de Next.js
  * Ver next.config.js para la configuración de rewrites
  */
-export const authClient = HttpClient.getInstance("", "auth");
+export const authClient = HttpClient.getInstance(
+  isServer ? process.env.BACKEND_AUTH_URL || "" : "",
+  "auth",
+);
 
 /**
  * Cliente HTTP para archivos
@@ -223,4 +180,7 @@ export const authClient = HttpClient.getInstance("", "auth");
  * Nota: baseURL vacío porque las rutas son manejadas por rewrites de Next.js
  * Ver next.config.js para la configuración de rewrites
  */
-export const filesClient = HttpClient.getInstance("", "files");
+export const fileClient = HttpClient.getInstance(
+  isServer ? process.env.BACKEND_FILES_URL || "" : "",
+  "files",
+);

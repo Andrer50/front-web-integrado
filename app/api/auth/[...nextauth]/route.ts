@@ -1,12 +1,19 @@
 import axios from "axios";
-import NextAuth from "next-auth";
+import NextAuth, {
+  type NextAuthOptions,
+  type User as NextAuthUser,
+} from "next-auth";
 import jwt from "jsonwebtoken";
 import CredentialsProvider from "next-auth/providers/credentials";
 import type { JWT } from "next-auth/jwt";
 import type { AxiosError } from "axios";
 
 import { ApiResponse } from "@/core/shared";
-import { AuthenticateDecodeToken, LoginAuthenticationResponse } from "@/core/auth/interfaces";
+import {
+  AuthenticateDecodeToken,
+  LoginAuthenticationResponse,
+} from "@/core/auth/interfaces";
+import { getUserByEmail } from "@/core/user/actions";
 
 async function refreshAccessToken(token: JWT) {
   try {
@@ -28,7 +35,6 @@ async function refreshAccessToken(token: JWT) {
     return { ...token, error: "RefreshAccessTokenError" };
   }
 }
-
 const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
