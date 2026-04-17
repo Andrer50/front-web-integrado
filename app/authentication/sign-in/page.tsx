@@ -2,12 +2,16 @@
 
 import { LoginAuthenticationRequest } from "@/core/auth/interfaces";
 import { useFormik } from "formik";
-import { BriefcaseMedical, Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, ArrowDownNarrowWide } from "lucide-react";
 import { getSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import LoginFormHeader from "@/presentation/authentication/components/login-form-header";
 
 export default function SignInPage() {
   return (
@@ -80,6 +84,7 @@ function SignInForm() {
       setIsLogging(false);
     }
   };
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 antialiased">
       <div className="w-full max-w-[420px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
@@ -88,33 +93,23 @@ function SignInForm() {
 
         <div className="p-8 sm:p-10">
           {/* Header */}
-          <div className="flex flex-col items-center justify-center mb-8">
-            <div className="w-14 h-14 bg-blanco-azulado rounded-xl flex items-center justify-center mb-5">
-              <BriefcaseMedical className="text-petroleo w-7 h-7" />
-            </div>
-            <h1 className="text-2xl sm:text-[26px] font-bold text-petroleo tracking-tight mb-2">
-              MediConnect
-            </h1>
-            <p className="text-[13px] text-gray-500 text-center font-medium">
-              Clinical Excellence Through Secure Access
-            </p>
-          </div>
+          <LoginFormHeader />
 
           {/* Form */}
           <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
             {/* Email Field */}
             <div>
-              <label
+              <Label
                 className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
                 htmlFor="email"
               >
                 Email Address
-              </label>
+              </Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Mail className="h-4 w-4 text-gray-500" />
                 </div>
-                <input
+                <Input
                   id="email"
                   name="email"
                   type="email"
@@ -130,24 +125,24 @@ function SignInForm() {
             {/* Password Field */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label
+                <Label
                   className="block text-[13px] font-semibold text-gris-azulado"
                   htmlFor="password"
                 >
                   Password
-                </label>
-                <a
+                </Label>
+                <Link
                   href="#"
                   className="text-[13px] font-semibold text-[#297da0] hover:text-celeste transition-colors"
                 >
                   Forgot Password?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                   <Lock className="h-4 w-4 text-gray-500" />
                 </div>
-                <input
+                <Input
                   id="password"
                   name="password"
                   type="password"
@@ -176,19 +171,19 @@ function SignInForm() {
           <div className="mt-8 pt-6 text-center">
             <p className="text-[12px] text-gray-400 leading-relaxed max-w-[280px] mx-auto">
               Authorized access only. By signing in, you agree to the{" "}
-              <a
+              <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
                 Terms of Service
-              </a>{" "}
+              </Link>{" "}
               &{" "}
-              <a
+              <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
                 Privacy Policy
-              </a>
+              </Link>
               .
             </p>
           </div>
