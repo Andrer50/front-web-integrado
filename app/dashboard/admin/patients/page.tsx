@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   Filter,
   MoreVertical,
@@ -15,7 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePatients } from "@/modules/user/patient/hooks/usePatients";
+import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
 
 export default function AdminPatientsPage() {
   const [page, setPage] = useState(0);
@@ -23,7 +24,11 @@ export default function AdminPatientsPage() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
 
-  const { data: apiResponse, isLoading, isPlaceholderData } = usePatients({
+  const {
+    data: apiResponse,
+    isLoading,
+    isPlaceholderData,
+  } = usePatients({
     page,
     size,
     query,
@@ -58,13 +63,15 @@ export default function AdminPatientsPage() {
             de contacto.
           </p>
         </div>
-        <Button
-          variant="celeste"
-          className="rounded-xl px-6 py-6 font-bold shadow-sm transition-all flex items-center gap-2"
-        >
-          <UserPlus className="w-5 h-5" />
-          Registrar Nuevo Paciente
-        </Button>
+        <Link href="/dashboard/admin/patients/create">
+          <Button
+            variant="celeste"
+            className="rounded-xl px-6 py-6 font-bold shadow-sm transition-all flex items-center gap-2"
+          >
+            <UserPlus className="w-5 h-5" />
+            Registrar Nuevo Paciente
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -124,7 +131,11 @@ export default function AdminPatientsPage() {
 
         {/* Main Content Table */}
         <div className="lg:col-span-9">
-          <Tabs defaultValue="all" className="w-full space-y-6" onValueChange={handleTabChange}>
+          <Tabs
+            defaultValue="all"
+            className="w-full space-y-6"
+            onValueChange={handleTabChange}
+          >
             <Card className="rounded-3xl border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
               <div className="p-6 border-b border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-4">
                 <TabsList className="bg-zinc-100 dark:bg-zinc-800 rounded-xl p-1 h-auto">
@@ -207,7 +218,8 @@ export default function AdminPatientsPage() {
                               <div className="flex items-center gap-4">
                                 <div className="w-11 h-11 rounded-xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-100 dark:border-zinc-700 shadow-sm">
                                   <span className="text-sm font-bold text-celeste">
-                                    {pat.firstName[0]}{pat.lastName[0]}
+                                    {pat.firstName[0]}
+                                    {pat.lastName[0]}
                                   </span>
                                 </div>
                                 <div>
@@ -251,7 +263,9 @@ export default function AdminPatientsPage() {
                                 <span
                                   className={`w-1.5 h-1.5 rounded-full ${pat.status === "ACTIVE" ? "bg-[#059669]" : "bg-[#d97706]"}`}
                                 ></span>
-                                {pat.status === "ACTIVE" ? "ACTIVO" : "INACTIVO"}
+                                {pat.status === "ACTIVE"
+                                  ? "ACTIVO"
+                                  : "INACTIVO"}
                               </span>
                             </td>
                             <td className="px-8 py-6 text-right">
@@ -267,7 +281,10 @@ export default function AdminPatientsPage() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={5} className="px-8 py-12 text-center text-zinc-500 font-medium">
+                          <td
+                            colSpan={5}
+                            className="px-8 py-12 text-center text-zinc-500 font-medium"
+                          >
                             No se encontraron pacientes registrados.
                           </td>
                         </tr>
@@ -281,7 +298,11 @@ export default function AdminPatientsPage() {
                 <p className="text-sm font-bold text-zinc-400">
                   Mostrando{" "}
                   <span className="text-petroleo dark:text-white">
-                    {patients.length > 0 ? page * size + 1 : 0} a {Math.min((page + 1) * size, pagination?.totalElements || 0)}
+                    {patients.length > 0 ? page * size + 1 : 0} a{" "}
+                    {Math.min(
+                      (page + 1) * size,
+                      pagination?.totalElements || 0,
+                    )}
                   </span>{" "}
                   de {pagination?.totalElements || 0} registros
                 </p>
@@ -295,9 +316,11 @@ export default function AdminPatientsPage() {
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
-                  
-                  {Array.from({ length: Math.min(5, pagination?.totalPages || 0) }).map((_, i) => {
-                    const pageNumber = i; // Simplificado para las primeras 5 páginas
+
+                  {Array.from({
+                    length: Math.min(5, pagination?.totalPages || 0),
+                  }).map((_, i) => {
+                    const pageNumber = i;
                     return (
                       <Button
                         key={i}
@@ -309,7 +332,7 @@ export default function AdminPatientsPage() {
                       </Button>
                     );
                   })}
-                  
+
                   {pagination?.totalPages && pagination.totalPages > 5 && (
                     <span className="px-2 text-zinc-400 font-bold">...</span>
                   )}
