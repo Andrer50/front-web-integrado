@@ -6,3 +6,20 @@ export interface ApiResponse<T> {
   message: string;
   data: T;
 }
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  numberOfElements: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface PaginationParams {
+  page?: number;
+  size?: number;
+}
