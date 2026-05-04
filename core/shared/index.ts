@@ -1,5 +1,5 @@
 export type Status = "ACTIVE" | "INACTIVE" | "PENDING";
-export type Role = "ADMIN" | "CLIENT";
+export type Role = "ADMIN" | "DOCTOR" | "PATIENT";
 
 export interface ApiResponse<T> {
   code: string;
