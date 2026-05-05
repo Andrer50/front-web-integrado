@@ -2,7 +2,17 @@
 
 import { PatientRegisterRequest } from "@/core/user/patient/interfaces";
 import { useFormik } from "formik";
-import { Mail, Lock, Phone, User, CreditCard, Calendar, ArrowRight } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Phone,
+  User,
+  CreditCard,
+  Calendar,
+  ArrowRight,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,12 +22,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import RegisterFormHeader from "@/presentation/authentication/components/register-form-header";
-import { useCreatePatient } from "@/modules/user/patient/hooks/useCreatePatient";
+import { useCreatePatient } from "@/modules/domain/user/patient/hooks/useCreatePatient";
 
 export default function SignUpPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const { createPatientMutation } = useCreatePatient();
+  const createPatientMutation = useCreatePatient();
 
   const initialValues: PatientRegisterRequest & { confirmPassword: string } = {
     firstName: "",
@@ -36,49 +48,48 @@ export default function SignUpPage() {
   });
 
   const handleSubmitRegister = async (
-  values: PatientRegisterRequest & { confirmPassword: string }
-) => {
-  if (values.password !== values.confirmPassword) {
-    toast.error("Passwords do not match");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    const { confirmPassword, ...payload } = values;
-
-    // 1. REGISTER
-    await createPatientMutation.mutateAsync(payload);
-
-    // 2. AUTO LOGIN 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email: values.email,
-      password: values.password,
-    });
-
-    if (result?.error) {
-      toast.error("Account created but login failed");
-      router.push("/authentication/sign-in");
+    values: PatientRegisterRequest & { confirmPassword: string },
+  ) => {
+    if (values.password !== values.confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
       return;
     }
 
-    toast.success("Account created successfully");
+    setIsSubmitting(true);
 
-    // 3. REDIRECT 
-    router.push("/dashboard");
+    try {
+      const { confirmPassword, ...payload } = values;
 
-  } catch (error: unknown) {
-    const message =
-      (error as { response?: { data?: { message?: string } } })?.response
-        ?.data?.message ?? "An error occurred during registration";
+      // 1. REGISTER
+      await createPatientMutation.mutateAsync(payload);
 
-    toast.error(message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      // 2. AUTO LOGIN
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (result?.error) {
+        toast.error("Cuenta creada pero falló el inicio de sesión");
+        router.push("/authentication/sign-in");
+        return;
+      }
+
+      toast.success("Cuenta creada con éxito");
+
+      // 3. REDIRECT
+      router.push("/dashboard");
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Ocurrió un error durante el registro";
+
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 antialiased">
@@ -95,132 +106,197 @@ export default function SignUpPage() {
             {/* First Name + Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="firstName">
-                  First Name
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="firstName"
+                >
+                  Nombre
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="firstName" name="firstName" type="text" placeholder="John"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.firstName}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  placeholder="Juan"
+                  startContent={<User className="h-4 w-4 text-gray-500" />}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.firstName}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="lastName">
-                  Last Name
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="lastName"
+                >
+                  Apellido
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <User className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="lastName" name="lastName" type="text" placeholder="Doe"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.lastName}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  placeholder="Pérez"
+                  startContent={<User className="h-4 w-4 text-gray-500" />}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.lastName}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
             </div>
 
             {/* Email */}
             <div>
-              <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="email">
-                Email Address
+              <Label
+                className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                htmlFor="email"
+              >
+                Correo Electrónico
               </Label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                </div>
-                <Input id="email" name="email" type="email" placeholder="patient@clinic.com"
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.email}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                />
-              </div>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="paciente@clinica.com"
+                startContent={<Mail className="h-4 w-4 text-gray-500" />}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.email}
+                className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+              />
             </div>
 
             {/* Password + Confirm Password */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="password">
-                  Password
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="password"
+                >
+                  Contraseña
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="password" name="password" type="password" placeholder="••••••••"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.password}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  startContent={<Lock className="h-4 w-4 text-gray-500" />}
+                  endContent={
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="focus:outline-none"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+                  }
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.password}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="confirmPassword">
-                  Confirm Password
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="confirmPassword"
+                >
+                  Confirmar Contraseña
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.confirmPassword}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  startContent={<Lock className="h-4 w-4 text-gray-500" />}
+                  endContent={
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="focus:outline-none"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-500" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-500" />
+                      )}
+                    </button>
+                  }
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.confirmPassword}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
             </div>
 
             {/* Phone + Document Number */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="phone">
-                  Phone
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="phone"
+                >
+                  Teléfono
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="phone" name="phone" type="tel" placeholder="+51999999999"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.phone}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="+51999999999"
+                  startContent={<Phone className="h-4 w-4 text-gray-500" />}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.phone}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="documentNumber">
-                  Document No.
+                <Label
+                  className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                  htmlFor="documentNumber"
+                >
+                  N° de Documento
                 </Label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <CreditCard className="h-4 w-4 text-gray-500" />
-                  </div>
-                  <Input id="documentNumber" name="documentNumber" type="text" placeholder="12345678"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.documentNumber}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                  />
-                </div>
+                <Input
+                  id="documentNumber"
+                  name="documentNumber"
+                  type="text"
+                  placeholder="12345678"
+                  startContent={<CreditCard className="h-4 w-4 text-gray-500" />}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.documentNumber}
+                  className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                />
               </div>
             </div>
 
             {/* Birth Date */}
             <div>
-              <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="birthDate">
-                Birth Date
+              <Label
+                className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
+                htmlFor="birthDate"
+              >
+                Fecha de Nacimiento
               </Label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                </div>
-                <Input id="birthDate" name="birthDate" type="date"
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.birthDate}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                />
-              </div>
+              <Input
+                id="birthDate"
+                name="birthDate"
+                type="date"
+                startContent={<Calendar className="h-4 w-4 text-gray-500" />}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.birthDate}
+                className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+              />
             </div>
 
             {/* Submit Button */}
@@ -230,7 +306,7 @@ export default function SignUpPage() {
               className="w-full mt-7 bg-[#2381a8] hover:bg-[#1f7396] text-white text-[15px] font-semibold py-6 rounded-lg shadow-sm"
               onClick={formik.submitForm}
             >
-              Create Account
+              Crear Cuenta
               <ArrowRight className="ml-2 w-[18px] h-[18px]" />
             </Button>
           </form>
@@ -238,9 +314,12 @@ export default function SignUpPage() {
           {/* Sign in link */}
           <div className="mt-6 text-center">
             <p className="text-[13px] text-gray-500">
-              Already have an account?{" "}
-              <Link href="/authentication/sign-in" className="text-[#297da0] hover:text-celeste transition-colors font-semibold">
-                Sign In
+              ¿Ya tienes una cuenta?{" "}
+              <Link
+                href="/authentication/sign-in"
+                className="text-[#297da0] hover:text-celeste transition-colors font-semibold"
+              >
+                Inicia Sesión
               </Link>
             </p>
           </div>
@@ -248,13 +327,19 @@ export default function SignUpPage() {
           {/* Footer Text */}
           <div className="mt-4 pt-4 border-t border-gray-100 text-center">
             <p className="text-[12px] text-gray-400 leading-relaxed max-w-[300px] mx-auto">
-              By creating an account, you agree to the{" "}
-              <Link href="#" className="text-[#297da0] hover:text-celeste transition-colors font-medium">
-                Terms of Service
+              Al crear una cuenta, aceptas los{" "}
+              <Link
+                href="#"
+                className="text-[#297da0] hover:text-celeste transition-colors font-medium"
+              >
+                Términos de Servicio
               </Link>{" "}
               &{" "}
-              <Link href="#" className="text-[#297da0] hover:text-celeste transition-colors font-medium">
-                Privacy Policy
+              <Link
+                href="#"
+                className="text-[#297da0] hover:text-celeste transition-colors font-medium"
+              >
+                Política de Privacidad
               </Link>
               .
             </p>

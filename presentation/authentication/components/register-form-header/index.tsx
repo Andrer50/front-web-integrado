@@ -10,7 +10,7 @@ export default function RegisterFormHeader() {
         MediConnect
       </h1>
       <p className="text-[13px] text-gray-500 text-center font-medium">
-        Create your patient account
+        Crea tu cuenta de paciente
       </p>
     </div>
   );

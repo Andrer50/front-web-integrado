@@ -2,7 +2,7 @@
 
 import { LoginAuthenticationRequest } from "@/core/auth/interfaces";
 import { useFormik } from "formik";
-import { Mail, Lock, ArrowRight, ArrowDownNarrowWide } from "lucide-react";
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { getSession, signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, Suspense } from "react";
@@ -18,7 +18,7 @@ export default function SignInPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4">
-          Loading...
+          Cargando...
         </div>
       }
     >
@@ -34,7 +34,7 @@ function SignInForm() {
   const searchParams = useSearchParams(); // Aquí se usa el hook problemático
 
   const callbackUrl = searchParams.get("callbackUrl");
-
+  const changeShowPassword = () => setShowPassword(!showPassword);
   const initialValues: LoginAuthenticationRequest = {
     email: "",
     password: "",
@@ -70,13 +70,13 @@ function SignInForm() {
           return;
         }
 
-        /*  if (session?.user.role === "ADMIN") {
-          router.push("/dashboard/admin-home");
+        if (session?.user.role === "ADMIN") {
+          router.push("/dashboard/admin");
         } else if (session?.user.role === "DOCTOR") {
-          router.push("/dashboard/home");
+          router.push("/dashboard/doctor");
         } else {
-          router.push("/dashboard");
-        } */
+          router.push("/dashboard/patient");
+        }
       }
     } catch {
       toast.error("Ocurrio un problema");
@@ -103,23 +103,19 @@ function SignInForm() {
                 className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
                 htmlFor="email"
               >
-                Email Address
+                Correo Electrónico
               </Label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                </div>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="doctor@clinic.com"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.email}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                />
-              </div>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="medico@clinica.com"
+                startContent={<Mail className="h-4 w-4 text-gray-500" />}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.email}
+                className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+              />
             </div>
 
             {/* Password Field */}
@@ -129,30 +125,39 @@ function SignInForm() {
                   className="block text-[13px] font-semibold text-gris-azulado"
                   htmlFor="password"
                 >
-                  Password
+                  Contraseña
                 </Label>
                 <Link
                   href="#"
                   className="text-[13px] font-semibold text-[#297da0] hover:text-celeste transition-colors"
                 >
-                  Forgot Password?
+                  ¿Olvidaste tu contraseña?
                 </Link>
               </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-gray-500" />
-                </div>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.password}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
-                />
-              </div>
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                startContent={<Lock className="h-4 w-4 text-gray-500" />}
+                endContent={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </button>
+                }
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                value={formik.values.password}
+                className="w-full py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+              />
             </div>
 
             {/* Submit Button */}
@@ -162,7 +167,7 @@ function SignInForm() {
               className="w-full mt-7 bg-[#2381a8] hover:bg-[#1f7396] text-white text-[15px] font-semibold py-6 rounded-lg shadow-sm"
               onClick={formik.submitForm}
             >
-              Secure Sign In
+              Iniciar Sesión Seguro
               <ArrowRight className="ml-2 w-[18px] h-[18px]" />
             </Button>
           </form>
@@ -170,19 +175,19 @@ function SignInForm() {
           {/* Footer Text */}
           <div className="mt-8 pt-6 text-center">
             <p className="text-[12px] text-gray-400 leading-relaxed max-w-[280px] mx-auto">
-              Authorized access only. By signing in, you agree to the{" "}
+              Solo acceso autorizado. Al iniciar sesión, aceptas los{" "}
               <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
-                Terms of Service
+                Términos de Servicio
               </Link>{" "}
               &{" "}
               <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
-                Privacy Policy
+                Política de Privacidad
               </Link>
               .
             </p>
