@@ -20,7 +20,6 @@ export interface PatientFilters {
 
 export interface PatientRegisterResponse {
   email: string;
-  password: string;
   phone: string;
   birthDate: string;
   documentNumber: string;
@@ -36,4 +35,6 @@ export interface PatientRegisterRequest {
   phone: string;
   birthDate: string;
   documentNumber: string;
+  gender?: string;
+  address?: string;
 }
