@@ -1,6 +1,15 @@
-import { type ApiResponse, type PaginatedResponse, type PaginationParams } from "@/core/shared";
+import {
+  type ApiResponse,
+  type PaginatedResponse,
+  type PaginationParams,
+} from "@/core/shared";
 import { apiClient } from "@/libs/http-client";
-import { PatientRegisterRequest, PatientRegisterResponse, Patient, PatientFilters } from "../interfaces";
+import {
+  PatientRegisterRequest,
+  PatientRegisterResponse,
+  PatientFilters,
+  PatientResponse,
+} from "../interfaces";
 
 /**
  * @description
@@ -23,12 +32,13 @@ export const createPatientAction = async (values: PatientRegisterRequest) => {
  * @description
  * Obtener pacientes paginados con filtros
  */
-export const getPatientsAction = async (params: PaginationParams & PatientFilters) => {
+export const getPatientsAction = async (
+  params: PaginationParams & PatientFilters,
+) => {
   try {
-    const { data } = await apiClient.get<ApiResponse<PaginatedResponse<Patient>>>(
-      "/api/v1/patients",
-      { params }
-    );
+    const { data } = await apiClient.get<
+      ApiResponse<PaginatedResponse<PatientResponse>>
+    >("/api/v1/patients", { params });
     return data;
   } catch (error) {
     console.error(error);

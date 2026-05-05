@@ -9,14 +9,10 @@ export const useCreatePatient = () => {
 
   return useMutation({
     mutationFn: createPatientAction,
-    onSuccess: (response) => {
-      if (response.code === "000") {
-        toast.success("Paciente registrado exitosamente");
-        queryClient.invalidateQueries({ queryKey: ["patients"] });
-        router.push("/dashboard/admin/patients");
-      } else {
-        toast.error(response.message || "Error al registrar paciente");
-      }
+    onSuccess: () => {
+      toast.success("Paciente registrado exitosamente");
+      queryClient.invalidateQueries({ queryKey: ["patients"] });
+      router.push("/dashboard/admin/patients");
     },
     onError: (error) => {
       toast.error(error.message || "Error de conexión con el servidor");

@@ -1,6 +1,6 @@
 import { Status } from "@/core/shared";
 
-export interface Patient {
+export interface PatientResponse {
   id: string;
   email: string;
   status: Status;
