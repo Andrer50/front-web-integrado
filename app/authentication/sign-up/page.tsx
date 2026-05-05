@@ -51,7 +51,7 @@ export default function SignUpPage() {
     // 1. REGISTER
     await createPatientMutation.mutateAsync(payload);
 
-    // 2. AUTO LOGIN (MISMO FLUJO QUE SIGN-IN)
+    // 2. AUTO LOGIN 
     const result = await signIn("credentials", {
       redirect: false,
       email: values.email,
@@ -66,7 +66,7 @@ export default function SignUpPage() {
 
     toast.success("Account created successfully");
 
-    // 3. REDIRECT (igual que login flow)
+    // 3. REDIRECT 
     router.push("/dashboard");
 
   } catch (error: unknown) {
