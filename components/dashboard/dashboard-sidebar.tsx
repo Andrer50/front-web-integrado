@@ -11,7 +11,8 @@ import {
   SquarePlus,
   LucideIcon,
   LayoutDashboard,
-  ClipboardList
+  ClipboardList,
+  Stethoscope
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
@@ -33,6 +34,11 @@ const adminItems: SidebarItem[] = [
     title: "Médicos",
     href: "/dashboard/admin/doctors",
     icon: BriefcaseMedical,
+  },
+  {
+    title: "Especialidades",
+    href: "/dashboard/admin/specialties",
+    icon: Stethoscope,
   },
   {
     title: "Pacientes",
