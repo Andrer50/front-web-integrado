@@ -31,7 +31,7 @@ function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLogging, setIsLogging] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams(); // Aquí se usa el hook problemático
+  const searchParams = useSearchParams(); 
 
   const callbackUrl = searchParams.get("callbackUrl");
 
@@ -47,6 +47,7 @@ function SignInForm() {
 
   const handleSubmitLogin = async (values: LoginAuthenticationRequest) => {
     setIsLogging(true);
+
     try {
       const result = await signIn("credentials", {
         redirect: false,
@@ -54,29 +55,37 @@ function SignInForm() {
         password: values.password,
       });
 
-      if (formik.errors.email || formik.errors.password) {
-        toast.error("Por favor, corrige los errores");
+      if (result?.error) {
+        toast.error(result.error);
         return;
       }
 
-      if (result?.error) {
-        toast.error(result.error);
-      } else if (result?.ok) {
+      if (result?.ok) {
         toast.success("Inicio de sesión exitoso");
-        const session = await getSession();
 
-        if (callbackUrl) {
+        let session = await getSession();
+
+        if (!session?.user) {
+          await new Promise((res) => setTimeout(res, 300));
+          session = await getSession();
+        }
+
+        const role = session?.user?.role;
+
+        if (callbackUrl && callbackUrl.startsWith("/")) {
           router.replace(callbackUrl);
           return;
         }
 
-        /*  if (session?.user.role === "ADMIN") {
-          router.push("/dashboard/admin-home");
-        } else if (session?.user.role === "DOCTOR") {
-          router.push("/dashboard/home");
+        if (role === "ADMIN") {
+          router.push("/dashboard/admin");
+        } else if (role === "DOCTOR") {
+          router.push("/dashboard/doctor");
+        } else if (role === "PATIENT") {
+          router.push("/dashboard");
         } else {
           router.push("/dashboard");
-        } */
+        }
       }
     } catch {
       toast.error("Ocurrio un problema");
@@ -88,22 +97,19 @@ function SignInForm() {
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 antialiased">
       <div className="w-full max-w-[420px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        {/* Top Gradient Border */}
         <div className="h-2 bg-gradient-to-r from-petroleo via-[#236b8e] to-celeste w-full"></div>
 
         <div className="p-8 sm:p-10">
-          {/* Header */}
           <LoginFormHeader />
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-            {/* Email Field */}
+          <form onSubmit={formik.handleSubmit} className="space-y-5">
+            {/* Email */}
             <div>
               <Label
                 className="block text-[13px] font-semibold text-gris-azulado mb-1.5"
                 htmlFor="email"
               >
-                Email Address
+                Correo electrónico
               </Label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -122,20 +128,20 @@ function SignInForm() {
               </div>
             </div>
 
-            {/* Password Field */}
+            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
                 <Label
                   className="block text-[13px] font-semibold text-gris-azulado"
                   htmlFor="password"
                 >
-                  Password
+                  Contraseña
                 </Label>
                 <Link
                   href="#"
                   className="text-[13px] font-semibold text-[#297da0] hover:text-celeste transition-colors"
                 >
-                  Forgot Password?
+                  ¿Olvidaste tu contraseña?
                 </Link>
               </div>
               <div className="relative">
@@ -155,34 +161,46 @@ function SignInForm() {
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Button */}
             <Button
               type="submit"
               isLoading={isLogging}
               className="w-full mt-7 bg-[#2381a8] hover:bg-[#1f7396] text-white text-[15px] font-semibold py-6 rounded-lg shadow-sm"
-              onClick={formik.submitForm}
             >
-              Secure Sign In
+              Iniciar sesión
               <ArrowRight className="ml-2 w-[18px] h-[18px]" />
             </Button>
           </form>
 
-          {/* Footer Text */}
+          {/* Registro */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              ¿No tienes cuenta?{" "}
+              <Link
+                href="/authentication/sign-up"
+                className="text-[#297da0] hover:text-celeste font-semibold"
+              >
+                Regístrate
+              </Link>
+            </p>
+          </div>
+
+          {/* Footer */}
           <div className="mt-8 pt-6 text-center">
             <p className="text-[12px] text-gray-400 leading-relaxed max-w-[280px] mx-auto">
-              Authorized access only. By signing in, you agree to the{" "}
+              Acceso autorizado únicamente. Al iniciar sesión, aceptas los{" "}
               <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
-                Terms of Service
+                Términos de Servicio
               </Link>{" "}
-              &{" "}
+              y la{" "}
               <Link
                 href="#"
                 className="text-[#297da0] hover:text-celeste transition-colors font-medium"
               >
-                Privacy Policy
+                Política de Privacidad
               </Link>
               .
             </p>

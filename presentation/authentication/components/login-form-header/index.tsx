@@ -10,7 +10,7 @@ export default function LoginFormHeader() {
         MediConnect
       </h1>
       <p className="text-[13px] text-gray-500 text-center font-medium">
-        Clinical Excellence Through Secure Access
+        Excelencia clínica a través de acceso seguro
       </p>
     </div>
   );

@@ -1,23 +1,44 @@
 "use client";
 
 import { PatientRegisterRequest } from "@/core/user/patient/interfaces";
-import { useFormik } from "formik";
-import { Mail, Lock, Phone, User, CreditCard, Calendar, ArrowRight } from "lucide-react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useCreatePatient } from "@/modules/user/patient/hooks/useCreatePatient";
+import RegisterFormHeader from "@/presentation/authentication/components/register-form-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSearchParams } from "next/navigation";
+import { useFormik } from "formik";
+import {
+  Mail,
+  Lock,
+  Phone,
+  User,
+  CreditCard,
+  Calendar,
+  ArrowRight,
+} from "lucide-react";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
-import RegisterFormHeader from "@/presentation/authentication/components/register-form-header";
-import { useCreatePatient } from "@/modules/user/patient/hooks/useCreatePatient";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
+import { getSession } from "next-auth/react";
 
+// ─── Estilos reutilizables ────────────────────────────────────────────────────
+const inputClassName =
+  "w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200";
+const labelClassName =
+  "block text-[13px] font-semibold text-gris-azulado mb-1.5";
+const iconClassName =
+  "absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none";
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { createPatientMutation } = useCreatePatient();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const initialValues: PatientRegisterRequest & { confirmPassword: string } = {
     firstName: "",
@@ -35,226 +56,303 @@ export default function SignUpPage() {
     onSubmit: (values) => handleSubmitRegister(values),
   });
 
+  // ─── Lógica de registro y auto-login ───────────────────────────────────────
+
   const handleSubmitRegister = async (
-  values: PatientRegisterRequest & { confirmPassword: string }
-) => {
-  if (values.password !== values.confirmPassword) {
-    toast.error("Passwords do not match");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    const { confirmPassword, ...payload } = values;
-
-    // 1. REGISTER
-    await createPatientMutation.mutateAsync(payload);
-
-    // 2. AUTO LOGIN 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email: values.email,
-      password: values.password,
-    });
-
-    if (result?.error) {
-      toast.error("Account created but login failed");
-      router.push("/authentication/sign-in");
+    values: PatientRegisterRequest & { confirmPassword: string },
+  ) => {
+    if (values.password !== values.confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
       return;
     }
 
-    toast.success("Account created successfully");
+    setIsSubmitting(true);
 
-    // 3. REDIRECT 
-    router.push("/dashboard");
+    try {
+      const { confirmPassword, ...payload } = values;
 
-  } catch (error: unknown) {
-    const message =
-      (error as { response?: { data?: { message?: string } } })?.response
-        ?.data?.message ?? "An error occurred during registration";
+      await createPatientMutation.mutateAsync(payload);
 
-    toast.error(message);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
 
+      if (result?.error) {
+        toast.error("Cuenta creada, pero hubo un error al iniciar sesión");
+        router.push("/authentication/sign-in");
+        return;
+      }
+
+      toast.success("¡Cuenta creada exitosamente!");
+
+      let session = await getSession();
+
+      if (!session?.user) {
+        await new Promise((res) => setTimeout(res, 300));
+        session = await getSession();
+      }
+
+      const role = session?.user?.role;
+
+      if (callbackUrl && callbackUrl.startsWith("/")) {
+        router.replace(callbackUrl);
+        return;
+      }
+
+      // fallback por rol
+      if (role === "ADMIN") {
+        router.push("/dashboard/admin");
+      } else if (role === "DOCTOR") {
+        router.push("/dashboard/doctor");
+      } else if (role === "PATIENT") {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (error: unknown) {
+      const message =
+        (error as { response?: { data?: { message?: string } } })?.response
+          ?.data?.message ?? "Ocurrió un error durante el registro";
+
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ─── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center p-4 antialiased">
       <div className="w-full max-w-[480px] bg-white rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        {/* Top Gradient Border */}
+        {/* Borde superior degradado */}
         <div className="h-2 bg-gradient-to-r from-petroleo via-[#236b8e] to-celeste w-full" />
 
         <div className="p-8 sm:p-10">
-          {/* Header */}
+          {/* Encabezado */}
           <RegisterFormHeader />
 
-          {/* Form */}
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-            {/* First Name + Last Name */}
+          {/* Formulario */}
+          <form onSubmit={formik.handleSubmit} className="space-y-5">
+            {/* Nombre y Apellido */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="firstName">
-                  First Name
+                <Label className={labelClassName} htmlFor="firstName">
+                  Nombre
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <User className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="firstName" name="firstName" type="text" placeholder="John"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.firstName}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    placeholder="Juan"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.firstName}
+                    className={inputClassName}
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="lastName">
-                  Last Name
+                <Label className={labelClassName} htmlFor="lastName">
+                  Apellido
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <User className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="lastName" name="lastName" type="text" placeholder="Doe"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.lastName}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    placeholder="Pérez"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.lastName}
+                    className={inputClassName}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Email */}
+            {/* Correo electrónico */}
             <div>
-              <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="email">
-                Email Address
+              <Label className={labelClassName} htmlFor="email">
+                Correo electrónico
               </Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <div className={iconClassName}>
                   <Mail className="h-4 w-4 text-gray-500" />
                 </div>
-                <Input id="email" name="email" type="email" placeholder="patient@clinic.com"
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.email}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="paciente@clinica.com"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.email}
+                  className={inputClassName}
                 />
               </div>
             </div>
 
-            {/* Password + Confirm Password */}
+            {/* Contraseña y Confirmar contraseña */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="password">
-                  Password
+                <Label className={labelClassName} htmlFor="password">
+                  Contraseña
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <Lock className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="password" name="password" type="password" placeholder="••••••••"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.password}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="••••••••"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.password}
+                    className={`${inputClassName} placeholder:text-lg`}
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="confirmPassword">
-                  Confirm Password
+                <Label className={labelClassName} htmlFor="confirmPassword">
+                  Confirmar contraseña
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <Lock className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="confirmPassword" name="confirmPassword" type="password" placeholder="••••••••"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.confirmPassword}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 placeholder:text-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="••••••••"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.confirmPassword}
+                    className={`${inputClassName} placeholder:text-lg`}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Phone + Document Number */}
+            {/* Teléfono y Número de documento */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="phone">
-                  Phone
+                <Label className={labelClassName} htmlFor="phone">
+                  Teléfono
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <Phone className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="phone" name="phone" type="tel" placeholder="+51999999999"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.phone}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    placeholder="+51999999999"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.phone}
+                    className={inputClassName}
                   />
                 </div>
               </div>
 
               <div>
-                <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="documentNumber">
-                  Document No.
+                <Label className={labelClassName} htmlFor="documentNumber">
+                  N° de documento
                 </Label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                  <div className={iconClassName}>
                     <CreditCard className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="documentNumber" name="documentNumber" type="text" placeholder="12345678"
-                    onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.documentNumber}
-                    className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                  <Input
+                    id="documentNumber"
+                    name="documentNumber"
+                    type="text"
+                    placeholder="12345678"
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    value={formik.values.documentNumber}
+                    className={inputClassName}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Birth Date */}
+            {/* Fecha de nacimiento */}
             <div>
-              <Label className="block text-[13px] font-semibold text-gris-azulado mb-1.5" htmlFor="birthDate">
-                Birth Date
+              <Label className={labelClassName} htmlFor="birthDate">
+                Fecha de nacimiento
               </Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <div className={iconClassName}>
                   <Calendar className="h-4 w-4 text-gray-500" />
                 </div>
-                <Input id="birthDate" name="birthDate" type="date"
-                  onChange={formik.handleChange} onBlur={formik.handleBlur} value={formik.values.birthDate}
-                  className="w-full pl-10 pr-4 py-3 bg-[#f3f6fc] border border-transparent rounded-lg text-sm text-petroleo placeholder:text-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-celeste/20 focus:border-celeste transition-all duration-200"
+                <Input
+                  id="birthDate"
+                  name="birthDate"
+                  type="date"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.birthDate}
+                  className={inputClassName}
                 />
               </div>
             </div>
 
-            {/* Submit Button */}
+            {/* Botón de registro */}
             <Button
               type="submit"
               isLoading={isSubmitting}
               className="w-full mt-7 bg-[#2381a8] hover:bg-[#1f7396] text-white text-[15px] font-semibold py-6 rounded-lg shadow-sm"
-              onClick={formik.submitForm}
             >
-              Create Account
+              Crear cuenta
               <ArrowRight className="ml-2 w-[18px] h-[18px]" />
             </Button>
           </form>
 
-          {/* Sign in link */}
+          {/* Enlace a iniciar sesión */}
           <div className="mt-6 text-center">
             <p className="text-[13px] text-gray-500">
-              Already have an account?{" "}
-              <Link href="/authentication/sign-in" className="text-[#297da0] hover:text-celeste transition-colors font-semibold">
-                Sign In
+              ¿Ya tienes una cuenta?{" "}
+              <Link
+                href="/authentication/sign-in"
+                className="text-[#297da0] hover:text-celeste transition-colors font-semibold"
+              >
+                Inicia sesión
               </Link>
             </p>
           </div>
 
-          {/* Footer Text */}
+          {/* Pie de página */}
           <div className="mt-4 pt-4 border-t border-gray-100 text-center">
             <p className="text-[12px] text-gray-400 leading-relaxed max-w-[300px] mx-auto">
-              By creating an account, you agree to the{" "}
-              <Link href="#" className="text-[#297da0] hover:text-celeste transition-colors font-medium">
-                Terms of Service
+              Al crear una cuenta, aceptas los{" "}
+              <Link
+                href="#"
+                className="text-[#297da0] hover:text-celeste transition-colors font-medium"
+              >
+                Términos de servicio
               </Link>{" "}
-              &{" "}
-              <Link href="#" className="text-[#297da0] hover:text-celeste transition-colors font-medium">
-                Privacy Policy
+              y la{" "}
+              <Link
+                href="#"
+                className="text-[#297da0] hover:text-celeste transition-colors font-medium"
+              >
+                Política de privacidad
               </Link>
               .
             </p>
