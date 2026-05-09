@@ -23,6 +23,8 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import RegisterFormHeader from "@/presentation/authentication/components/register-form-header";
 import { useCreatePatient } from "@/modules/domain/user/patient/hooks/useCreatePatient";
+import { useSearchParams } from "next/navigation";
+import { getSession } from "next-auth/react";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -30,6 +32,8 @@ export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const createPatientMutation = useCreatePatient();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
 
   const initialValues: PatientRegisterRequest & { confirmPassword: string } = {
     firstName: "",
@@ -78,8 +82,32 @@ export default function SignUpPage() {
 
       toast.success("Cuenta creada con éxito");
 
-      // 3. REDIRECT
-      router.push("/dashboard");
+      // 3. GET SESSION
+      let session = await getSession();
+
+      if (!session?.user) {
+        await new Promise((res) => setTimeout(res, 300));
+        session = await getSession();
+      }
+
+      const role = session?.user?.role;
+
+      // 4. REDIRECT BASED ON CALLBACK OR ROLE
+      if (callbackUrl && callbackUrl.startsWith("/")) {
+        router.replace(callbackUrl);
+        return;
+      }
+
+      // Fallback por rol
+      if (role === "ADMIN") {
+        router.push("/dashboard/admin");
+      } else if (role === "DOCTOR") {
+        router.push("/dashboard/doctor");
+      } else if (role === "PATIENT") {
+        router.push("/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (error: unknown) {
       const message =
         (error as { response?: { data?: { message?: string } } })?.response
@@ -102,7 +130,7 @@ export default function SignUpPage() {
           <RegisterFormHeader />
 
           {/* Form */}
-          <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={formik.handleSubmit} className="space-y-5">
             {/* First Name + Last Name */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -304,7 +332,6 @@ export default function SignUpPage() {
               type="submit"
               isLoading={isSubmitting}
               className="w-full mt-7 bg-[#2381a8] hover:bg-[#1f7396] text-white text-[15px] font-semibold py-6 rounded-lg shadow-sm"
-              onClick={formik.submitForm}
             >
               Crear Cuenta
               <ArrowRight className="ml-2 w-[18px] h-[18px]" />
