@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
 import { Button } from "@/components/ui/button";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 
 interface SidebarItem {
   title: string;
@@ -98,26 +99,16 @@ const patientItems: SidebarItem[] = [
   },
 ];
 
-interface DashboardSidebarProps {
+interface SidebarContentProps {
   role: Role;
+  pathname: string;
+  filteredItems: SidebarItem[];
+  onItemClick?: () => void;
 }
 
-export function DashboardSidebar({ role }: DashboardSidebarProps) {
-  const pathname = usePathname();
-
-  const getSidebarItems = () => {
-    switch (role) {
-      case "ADMIN": return adminItems;
-      case "DOCTOR": return doctorItems;
-      case "PATIENT": return patientItems;
-      default: return [];
-    }
-  };
-
-  const filteredItems = getSidebarItems();
-
+function SidebarContent({ role, pathname, filteredItems, onItemClick }: SidebarContentProps) {
   return (
-    <aside className="w-64 bg-blanco-azulado dark:bg-gris-azulado flex flex-col h-screen sticky top-0 transition-all duration-300 border-none shadow-none">
+    <div className="flex flex-col h-full bg-blanco-azulado dark:bg-gris-azulado">
       {/* Logo Section */}
       <div className="p-8 flex items-center gap-4">
         <div className="w-12 h-12 bg-celeste rounded-2xl flex items-center justify-center shadow-sm">
@@ -141,6 +132,7 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onItemClick}
               className={cn(
                 "flex items-center gap-4 px-6 py-4 rounded-xl text-sm font-bold transition-all duration-200 relative group",
                 isActive
@@ -171,6 +163,48 @@ export function DashboardSidebar({ role }: DashboardSidebarProps) {
           Cerrar Sesión
         </Button>
       </div>
-    </aside>
+    </div>
+  );
+}
+
+interface DashboardSidebarProps {
+  role: Role;
+  isMobileOpen?: boolean;
+  onMobileOpenChange?: (open: boolean) => void;
+}
+
+export function DashboardSidebar({ role, isMobileOpen, onMobileOpenChange }: DashboardSidebarProps) {
+  const pathname = usePathname();
+
+  const getSidebarItems = () => {
+    switch (role) {
+      case "ADMIN": return adminItems;
+      case "DOCTOR": return doctorItems;
+      case "PATIENT": return patientItems;
+      default: return [];
+    }
+  };
+
+  const filteredItems = getSidebarItems();
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-blanco-azulado dark:bg-gris-azulado flex flex-col h-screen sticky top-0 transition-all duration-300 border-none shadow-none">
+        <SidebarContent role={role} pathname={pathname} filteredItems={filteredItems} />
+      </aside>
+
+      {/* Mobile Drawer */}
+      <Drawer open={isMobileOpen} onOpenChange={onMobileOpenChange} direction="left">
+        <DrawerContent className="p-0 border-none h-full bg-blanco-azulado dark:bg-gris-azulado">
+          <SidebarContent 
+            role={role} 
+            pathname={pathname} 
+            filteredItems={filteredItems} 
+            onItemClick={() => onMobileOpenChange?.(false)}
+          />
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }

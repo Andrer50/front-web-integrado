@@ -1,14 +1,25 @@
 "use client";
 
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, Menu } from "lucide-react";
 import { useSession } from "next-auth/react";
 
-export function DashboardNavbar() {
+interface DashboardNavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
   const { data: session } = useSession();
 
   return (
-    <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-8 sticky top-0 z-10">
+    <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-10">
       <div className="flex items-center gap-4 flex-1">
+        <button
+          onClick={onMenuClick}
+          className="p-2 -ml-2 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors md:hidden focus:outline-none"
+          aria-label="Abrir menú"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
         <div className="relative max-w-md w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
           <input

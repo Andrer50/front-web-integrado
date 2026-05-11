@@ -81,21 +81,21 @@ export default function PatientDashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Program 1 */}
           <Card className="rounded-[2.5rem] border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all group overflow-hidden">
-            <CardContent className="p-8 flex items-center gap-6">
-              <div className="w-24 h-24 bg-blanco-azulado rounded-[2rem] flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
-                <HeartPulse className="w-12 h-12 text-celeste" />
+            <CardContent className="p-5 sm:p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blanco-azulado rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
+                <HeartPulse className="w-10 h-10 sm:w-12 sm:h-12 text-celeste" />
               </div>
-              <div className="space-y-2 flex-1">
-                <h3 className="text-xl font-bold text-petroleo dark:text-white">Programa Viva +</h3>
+              <div className="space-y-2 flex-1 w-full text-center sm:text-left">
+                <h3 className="text-lg sm:text-xl font-bold text-petroleo dark:text-white">Programa Viva +</h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
                   Un programa pre-pago que cubre parte de los gastos de consultas y urgencias.
                 </p>
-                <div className="pt-2 flex items-end justify-between">
-                  <div>
+                <div className="pt-2 flex items-center justify-between gap-4">
+                  <div className="text-left">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Desde</span>
-                    <span className="text-2xl font-semibold text-verde-salud dark:text-blue-400">S/ 31.5</span>
+                    <span className="text-xl sm:text-2xl font-semibold text-verde-salud dark:text-blue-400">S/ 31.5</span>
                   </div>
-                  <Button variant="celeste" size="sm" className="rounded-xl font-bold">Inscribirme</Button>
+                  <Button variant="celeste" size="sm" className="rounded-xl font-bold shrink-0">Inscribirme</Button>
                 </div>
               </div>
             </CardContent>
@@ -103,21 +103,21 @@ export default function PatientDashboardPage() {
 
           {/* Program 2 */}
           <Card className="rounded-[2.5rem] border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all group overflow-hidden">
-            <CardContent className="p-8 flex items-center gap-6">
-              <div className="w-24 h-24 bg-blanco-azulado rounded-[2rem] flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
-                <Baby className="w-12 h-12 text-verde-salud" />
+            <CardContent className="p-5 sm:p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-start gap-5 sm:gap-6">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-blanco-azulado rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center shrink-0 group-hover:rotate-6 transition-transform">
+                <Baby className="w-10 h-10 sm:w-12 sm:h-12 text-verde-salud" />
               </div>
-              <div className="space-y-2 flex-1">
-                <h3 className="text-xl font-bold text-petroleo dark:text-white">Programa de maternidad</h3>
+              <div className="space-y-2 flex-1 w-full text-center sm:text-left">
+                <h3 className="text-lg sm:text-xl font-bold text-petroleo dark:text-white">Programa de maternidad</h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
                   Un programa integral que te cuida antes, durante y después del embarazo.
                 </p>
-                <div className="pt-2 flex items-end justify-between">
-                  <div>
+                <div className="pt-2 flex items-center justify-between gap-4">
+                  <div className="text-left">
                     <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Desde</span>
-                    <span className="text-2xl font-semibold text-verde-salud dark:text-blue-400">S/ 120.0</span>
+                    <span className="text-xl sm:text-2xl font-semibold text-verde-salud dark:text-blue-400">S/ 120.0</span>
                   </div>
-                  <Button variant="celeste" size="sm" className="rounded-xl font-bold">Inscribirme</Button>
+                  <Button variant="celeste" size="sm" className="rounded-xl font-bold shrink-0">Inscribirme</Button>
                 </div>
               </div>
             </CardContent>
