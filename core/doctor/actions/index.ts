@@ -30,3 +30,15 @@ export const getDoctorsAction = async (
     throw error;
   }
 };
+
+export const getDoctorByIdAction = async (id: string) => {
+  try {
+    const { data } = await apiClient.get<ApiResponse<DoctorResponse>>(
+      `/api/v1/doctors/${id}`,
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};

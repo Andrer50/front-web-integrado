@@ -29,3 +29,49 @@ export interface AppointmentFilters extends PaginationParams {
   doctorId?: string;
   status?: string;
 }
+
+export interface GenerateSlotsRequest {
+  doctorId: string;
+  consultingRoomId: string;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+  slotDurationMinutes: number;
+}
+
+export interface DoctorScheduleSlotResponse {
+  id: string;
+  doctorId: string;
+  doctorName: string;
+  consultingRoomId: string;
+  consultingRoomNumber: string;
+  branchId: string;
+  branchName: string;
+  slotDate: string; // "YYYY-MM-DD"
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+  status: "AVAILABLE" | "BOOKED" | "BLOCKED";
+}
+
+export interface SlotItem {
+  slotId: string;
+  time: string; // "HH:mm"
+}
+
+export interface DateGroup {
+  date: string; // "YYYY-MM-DD"
+  dayLabel: string; // "Lun"
+  dateLabel: string; // "14 May"
+  slots: SlotItem[];
+}
+
+export interface AvailableDoctorSlotsResponse {
+  doctorId: string;
+  doctorName: string;
+  cmp: string;
+  specialty: string;
+  branchName: string;
+  branchAddress: string;
+  modality: string;
+  availableDates: DateGroup[];
+}

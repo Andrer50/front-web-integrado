@@ -8,7 +8,7 @@ export interface InputProps extends React.ComponentProps<"input"> {
 
 function Input({ className, type, startContent, endContent, ...props }: InputProps) {
   return (
-    <div className="relative flex items-center w-full">
+    <div className="relative flex items-center w-full group">
       {startContent && (
         <div className="absolute left-3 inset-y-0 flex items-center justify-center text-muted-foreground pointer-events-none">
           {startContent}

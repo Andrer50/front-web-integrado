@@ -17,11 +17,9 @@ export const doctorSchema = Yup.object().shape({
     .matches(/^[0-9]+$/, "Solo se permiten números")
     .min(9, "El teléfono debe tener al menos 9 dígitos")
     .required("El teléfono es obligatorio"),
-  medicalLicenseNumber: Yup.string()
-    .required("El número de colegiatura es obligatorio"),
-  bio: Yup.string()
-    .min(20, "La biografía debe tener al menos 20 caracteres")
-    .required("La biografía es obligatoria"),
+  medicalLicenseNumber: Yup.string().required(
+    "El número de colegiatura es obligatorio",
+  ),
   specialtyIds: Yup.array()
     .min(1, "Debe seleccionar al menos una especialidad")
     .required("Las especialidades son obligatorias"),

@@ -71,8 +71,6 @@ export default function SpecialtiesPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative group flex-1 sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
             <Input
               type="text"
               placeholder="Buscar..."
@@ -81,9 +79,11 @@ export default function SpecialtiesPage() {
                 setSearchTerm(e.target.value);
                 setPage(0);
               }}
-              className="pl-9 h-10 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl text-sm focus:ring-celeste/10 transition-all font-medium"
+              startContent={
+                <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+              }
+              className="h-10 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl text-sm focus-ring-celeste/10 transition-all font-medium"
             />
-          </div>
 
           <CreateSpecialtyDialog />
         </div>

@@ -160,16 +160,16 @@ export default function AdminPatientsPage() {
                 </TabsList>
 
                 <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 z-10" />
                     <Input
                       type="text"
                       placeholder="Buscar paciente..."
                       value={query}
                       onChange={handleSearch}
-                      className="pl-10 h-auto py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus-visible:ring-celeste w-48 lg:w-64 font-medium"
+                      startContent={
+                        <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                      }
+                      className="h-auto py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus-visible:ring-celeste w-48 lg:w-64 font-medium"
                     />
-                  </div>
                   <Button
                     variant="ghost"
                     size="icon"
