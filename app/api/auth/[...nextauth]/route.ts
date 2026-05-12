@@ -65,10 +65,27 @@ const authOptions: NextAuthOptions = {
             return null;
           }
 
+          const cleanString = (val: unknown): string => {
+            if (!val || val === "null" || val === "undefined") return "";
+            return String(val).trim();
+          };
+
+          const decodedToken = decoded as unknown as Record<string, unknown>;
+          const userFirstName = cleanString(user.firstName) || cleanString(decodedToken.firstName) || cleanString(decodedToken.given_name) || "";
+          const userLastName = cleanString(user.lastName) || cleanString(decodedToken.lastName) || cleanString(decodedToken.family_name) || "";
+          
+          let userName = "";
+          if (userFirstName || userLastName) {
+            userName = `${userFirstName} ${userLastName}`.trim();
+          } else {
+            const tokenName = cleanString(decodedToken.name);
+            userName = tokenName || user.email || decoded.sub || "Usuario de Prueba";
+          }
+
           return {
             id: user.id,
             email: user.email,
-            name: `${user.firstName} ${user.lastName}`,
+            name: userName,
             profilePicture: user.profilePicture,
             phone: user.phone,
             role: user.role,

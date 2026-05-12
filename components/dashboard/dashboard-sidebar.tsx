@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
+import { signOut } from "next-auth/react";
 
 interface SidebarItem {
   title: string;
@@ -124,10 +125,16 @@ function SidebarContent({ role, pathname, filteredItems, onItemClick }: SidebarC
         </div>
       </div>
 
-      {/* Navigation Section */}
       <nav className="flex-1 px-4 space-y-2 mt-8">
         {filteredItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const isRootPanel = [
+            "/dashboard/admin",
+            "/dashboard/doctor",
+            "/dashboard/patient",
+          ].includes(item.href);
+          const isActive = isRootPanel
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.href}
@@ -157,7 +164,7 @@ function SidebarContent({ role, pathname, filteredItems, onItemClick }: SidebarC
         <Button
           variant="ghost"
           className="flex items-center justify-start gap-4 px-6 py-6 rounded-xl text-sm font-bold text-petroleo/70 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/10 transition-all duration-200 w-full"
-          onClick={() => {/* Implement logout logic */}}
+          onClick={() => signOut({ callbackUrl: "/authentication/sign-in" })}
         >
           <LogOut className="w-5 h-5" />
           Cerrar Sesión

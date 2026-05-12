@@ -10,6 +10,13 @@ import { useFormik } from "formik";
 import { useCreatePatient } from "@/modules/domain/user/patient/hooks/useCreatePatient";
 import { PatientRegisterRequest } from "@/core/user/patient/interfaces";
 import { patientValidationSchema } from "@/modules/features/user/patient/validations";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function CreatePatientPage() {
   const router = useRouter();
@@ -155,15 +162,19 @@ export default function CreatePatientPage() {
                 >
                   Género
                 </Label>
-                <select
-                  id="gender"
-                  {...formik.getFieldProps("gender")}
-                  className="w-full h-11 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 focus:outline-none focus:ring-2 focus:ring-celeste text-sm font-medium"
+                <Select
+                  value={formik.values.gender}
+                  onValueChange={(value) => formik.setFieldValue("gender", value)}
                 >
-                  <option value="MALE">Masculino</option>
-                  <option value="FEMALE">Femenino</option>
-                  <option value="OTHER">Otro</option>
-                </select>
+                  <SelectTrigger className="w-full h-11 px-3 py-2 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 focus:outline-none focus:ring-2 focus:ring-celeste text-sm font-medium cursor-pointer">
+                    <SelectValue placeholder="Selecciona género..." />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 font-semibold text-zinc-700 dark:text-zinc-300">
+                    <SelectItem value="MALE" className="rounded-lg focus:bg-celeste/10 focus:text-celeste cursor-pointer">Masculino</SelectItem>
+                    <SelectItem value="FEMALE" className="rounded-lg focus:bg-celeste/10 focus:text-celeste cursor-pointer">Femenino</SelectItem>
+                    <SelectItem value="OTHER" className="rounded-lg focus:bg-celeste/10 focus:text-celeste cursor-pointer">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>

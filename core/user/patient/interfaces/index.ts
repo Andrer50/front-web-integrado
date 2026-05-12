@@ -16,6 +16,7 @@ export interface PatientResponse {
 export interface PatientFilters {
   query?: string;
   status?: string;
+  userId?: string;
 }
 
 export interface PatientRegisterResponse {

@@ -7,8 +7,19 @@ interface DashboardNavbarProps {
   onMenuClick?: () => void;
 }
 
+const ROLE_TRANSLATIONS: Record<string, string> = {
+  PATIENT: "PACIENTE",
+  DOCTOR: "MÉDICO",
+  ADMIN: "ADMINISTRADOR",
+};
+
 export function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
   const { data: session } = useSession();
+
+  const userRole = session?.user?.role?.toUpperCase();
+  const roleDisplay = userRole
+    ? ROLE_TRANSLATIONS[userRole] || session?.user.role
+    : "ADMINISTRADOR";
 
   return (
     <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 md:px-8 sticky top-0 z-10">
@@ -39,15 +50,23 @@ export function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
         <div className="flex items-center gap-3 border-l border-zinc-200 dark:border-zinc-800 pl-6">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-semibold text-zinc-900 dark:text-white leading-none">
-              {session?.user?.name || "Usuario de Prueba"}
+              {session?.user?.name &&
+              !session.user.name.includes("null") &&
+              !session.user.name.includes("undefined")
+                ? session.user.name
+                : session?.user?.email || "Usuario de Prueba"}
             </p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-              {session?.user?.role || "Administrador"}
+              {roleDisplay}
             </p>
           </div>
           <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border-2 border-white dark:border-zinc-800 shadow-sm">
             {session?.user?.image ? (
-              <img src={session.user.image} alt="Profile" className="w-full h-full object-cover" />
+              <img
+                src={session.user.image}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <User className="w-6 h-6 text-zinc-400" />
             )}
