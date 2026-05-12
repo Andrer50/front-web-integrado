@@ -16,14 +16,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useDoctor } from "@/modules/domain/doctor/hooks";
 import { toast } from "sonner";
 import { useBranches } from "@/modules/domain/branch/hooks/useBranches";
 import { useConsultingRooms } from "@/modules/domain/branch/hooks/useConsultingRooms";
-import {
-  useGenerateSlots,
-  useDoctorSlots,
-} from "@/modules/domain/appointment/hooks";
 import {
   Select,
   SelectContent,
@@ -31,6 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDoctorSlots } from "@/modules/domain/appointment/hooks/useDoctorSlots";
+import { useGenerateSlots } from "@/modules/domain/appointment/hooks/useGenerateSlots";
+import { useDoctor } from "@/modules/domain/doctor/hooks/useDoctor";
 
 export default function DoctorSchedulePage() {
   const params = useParams();
@@ -49,7 +47,8 @@ export default function DoctorSchedulePage() {
   const { data: doctorRes, isLoading: isLoadingDoctor } = useDoctor(doctorId);
   const { data: branchRes, isLoading: isLoadingBranches } = useBranches();
   const { data: roomRes, isLoading: isLoadingRooms } = useConsultingRooms();
-  const { data: slotsRes, isLoading: isLoadingSlots } = useDoctorSlots(doctorId);
+  const { data: slotsRes, isLoading: isLoadingSlots } =
+    useDoctorSlots(doctorId);
 
   // Mutation
   const generateSlotsMutation = useGenerateSlots({
@@ -131,12 +130,15 @@ export default function DoctorSchedulePage() {
   }
 
   // Agrupar slots por fecha para visualizarlos de manera ordenada
-  const groupedSlots = slots.reduce<Record<string, typeof slots>>((acc, slot) => {
-    const dateStr = slot.slotDate;
-    if (!acc[dateStr]) acc[dateStr] = [];
-    acc[dateStr].push(slot);
-    return acc;
-  }, {});
+  const groupedSlots = slots.reduce<Record<string, typeof slots>>(
+    (acc, slot) => {
+      const dateStr = slot.slotDate;
+      if (!acc[dateStr]) acc[dateStr] = [];
+      acc[dateStr].push(slot);
+      return acc;
+    },
+    {},
+  );
 
   const sortedDates = Object.keys(groupedSlots).sort();
 
@@ -484,8 +486,9 @@ export default function DoctorSchedulePage() {
                 Sin Horarios Cargados
               </h4>
               <p className="text-xs text-zinc-400 font-medium leading-relaxed mt-1">
-                Este médico no cuenta con bloques programados en la base de datos.
-                Completa el formulario de arriba para habilitar sus primeras citas de reserva.
+                Este médico no cuenta con bloques programados en la base de
+                datos. Completa el formulario de arriba para habilitar sus
+                primeras citas de reserva.
               </p>
             </div>
           ) : (

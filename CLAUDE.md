@@ -72,7 +72,11 @@ export const createDomainAction = async (values: DomainRequest) => {
 The modules layer binds Core actions to React framework primitives, using `@tanstack/react-query` to handle caching, background synchronization, and automatic re-fetching on mutations.
 
 #### 🪝 Hooks (`/modules/domain/[domain]/hooks/`)
-Implement query and mutation hooks here. Include a barrel `index.ts` file in the `hooks` folder for compact imports.
+Implement query and mutation hooks here. 
+
+> [!IMPORTANT]
+> **NO usar archivos barrel `index.ts` para centralizar hooks**. Importa cada hook directamente desde su archivo específico (ej: `import { useCreateBranch } from "@/modules/domain/branch/hooks/useCreateBranch"`) para evitar dependencias circulares, mantener la claridad de las importaciones y optimizar la carga selectiva de bundles.
+
 * **Query Hooks (`use[Domain]s.ts`)**:
   ```typescript
   import { useQuery } from "@tanstack/react-query";
