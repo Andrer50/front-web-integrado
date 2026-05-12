@@ -12,7 +12,8 @@ import {
   LucideIcon,
   LayoutDashboard,
   ClipboardList,
-  Stethoscope
+  Stethoscope,
+  MapPin
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
@@ -41,6 +42,11 @@ const adminItems: SidebarItem[] = [
     title: "Especialidades",
     href: "/dashboard/admin/specialties",
     icon: Stethoscope,
+  },
+  {
+    title: "Sedes",
+    href: "/dashboard/admin/branches",
+    icon: MapPin,
   },
   {
     title: "Pacientes",

@@ -123,16 +123,16 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
         className="space-y-6 mt-0 border-none p-0 outline-none"
       >
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 z-10" />
             <Input
               type="text"
               placeholder="Buscar por médico o especialidad..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-auto py-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl focus-visible:ring-celeste font-medium"
+              startContent={
+                <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+              }
+              className="h-auto py-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl focus-visible:ring-celeste font-medium"
             />
-          </div>
 
           <Select
             value={statusFilter}

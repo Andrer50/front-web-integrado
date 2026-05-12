@@ -4,16 +4,16 @@ import { useState } from "react";
 import {
   Plus,
   Filter,
-  MoreVertical,
   TrendingUp,
   Search,
-  Stethoscope,
   Mail,
   Phone,
   Loader2,
   AlertCircle,
+  Calendar,
+  Pencil,
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -153,16 +153,16 @@ export default function AdminDoctorsPage() {
                 </TabsList>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-72">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 z-10" />
-                    <Input
-                      type="text"
-                      placeholder="Buscar por nombre o CMP..."
-                      value={search}
-                      onChange={handleSearch}
-                      className="pl-12 h-12 bg-zinc-50 dark:bg-zinc-900 border-none rounded-2xl text-sm focus-visible:ring-2 focus-visible:ring-celeste/20 font-bold text-petroleo dark:text-white"
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    placeholder="Buscar por nombre o CMP..."
+                    value={search}
+                    onChange={handleSearch}
+                    startContent={
+                      <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                    }
+                    className="h-12 bg-zinc-50 dark:bg-zinc-900 border-none rounded-2xl text-sm focus-visible:ring-2 focus-visible:ring-celeste/20 font-bold text-petroleo dark:text-white"
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -300,14 +300,35 @@ export default function AdminDoctorsPage() {
                                   : "INACTIVO"}
                               </span>
                             </td>
-                            <td className="px-8 py-7 text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-10 w-10 text-zinc-400 hover:text-petroleo hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-xl transition-all"
-                              >
-                                <MoreVertical className="w-5 h-5" />
-                              </Button>
+                            <td className="px-8 py-7">
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    router.push(
+                                      `/dashboard/admin/doctors/schedule/${doc.id}`,
+                                    )
+                                  }
+                                  className="h-10 w-10 text-zinc-400 hover:text-celeste hover:bg-celeste/10 dark:hover:bg-celeste/20 rounded-xl transition-all"
+                                  title="Configurar Horarios"
+                                >
+                                  <Calendar className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() =>
+                                    router.push(
+                                      `/dashboard/admin/doctors/edit/${doc.id}`,
+                                    )
+                                  }
+                                  className="h-10 w-10 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all"
+                                  title="Editar Médico"
+                                >
+                                  <Pencil className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))

@@ -64,7 +64,7 @@ export default function CreateDoctorPage() {
     const fieldsToValidate = (
       step === 1
         ? ["firstName", "lastName", "email", "password", "phone"]
-        : ["medicalLicenseNumber", "bio", "specialtyIds"]
+        : ["medicalLicenseNumber", "specialtyIds"]
     ) as (keyof DoctorRequest)[];
 
     const errors = await formik.validateForm();
@@ -166,21 +166,21 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
                         Nombres
                       </label>
-                      <div className="relative group">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="firstName"
-                          value={formik.values.firstName}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="Ej. Juan Carlos"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.firstName && formik.errors.firstName
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="firstName"
+                        value={formik.values.firstName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Ej. Juan Carlos"
+                        startContent={
+                          <User className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.firstName && formik.errors.firstName
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.firstName && formik.errors.firstName && (
                         <p className="text-xs text-rose-500 font-bold ml-1">
                           {formik.errors.firstName}
@@ -192,21 +192,21 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
                         Apellidos
                       </label>
-                      <div className="relative group">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="lastName"
-                          value={formik.values.lastName}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="Ej. Pérez García"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.lastName && formik.errors.lastName
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="lastName"
+                        value={formik.values.lastName}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Ej. Pérez García"
+                        startContent={
+                          <User className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.lastName && formik.errors.lastName
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.lastName && formik.errors.lastName && (
                         <p className="text-xs text-rose-500 font-bold ml-1">
                           {formik.errors.lastName}
@@ -218,22 +218,22 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
                         Correo Electrónico
                       </label>
-                      <div className="relative group">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="email"
-                          type="email"
-                          value={formik.values.email}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="juan.perez@ejemplo.com"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.email && formik.errors.email
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="email"
+                        type="email"
+                        value={formik.values.email}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="juan.perez@ejemplo.com"
+                        startContent={
+                          <Mail className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.email && formik.errors.email
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.email && formik.errors.email && (
                         <p className="text-xs text-rose-500 font-bold ml-1">
                           {formik.errors.email}
@@ -245,21 +245,21 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
                         Teléfono
                       </label>
-                      <div className="relative group">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="phone"
-                          value={formik.values.phone}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="999888777"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.phone && formik.errors.phone
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="phone"
+                        value={formik.values.phone}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="999888777"
+                        startContent={
+                          <Phone className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.phone && formik.errors.phone
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.phone && formik.errors.phone && (
                         <p className="text-xs text-rose-500 font-bold ml-1">
                           {formik.errors.phone}
@@ -271,22 +271,22 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
                         Contraseña Provisional
                       </label>
-                      <div className="relative group">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="password"
-                          type="password"
-                          value={formik.values.password}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="••••••••"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.password && formik.errors.password
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="password"
+                        type="password"
+                        value={formik.values.password}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="••••••••"
+                        startContent={
+                          <Lock className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.password && formik.errors.password
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.password && formik.errors.password && (
                         <p className="text-xs text-rose-500 font-bold ml-1">
                           {formik.errors.password}
@@ -337,22 +337,22 @@ export default function CreateDoctorPage() {
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
                         Número de Colegiatura (CMP)
                       </label>
-                      <div className="relative group">
-                        <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        <Input
-                          name="medicalLicenseNumber"
-                          value={formik.values.medicalLicenseNumber}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          placeholder="Ej. 123456"
-                          className={`pl-11 h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                            formik.touched.medicalLicenseNumber &&
-                            formik.errors.medicalLicenseNumber
-                              ? "ring-2 ring-rose-500/50 border-rose-500"
-                              : "focus:ring-celeste/20"
-                          }`}
-                        />
-                      </div>
+                      <Input
+                        name="medicalLicenseNumber"
+                        value={formik.values.medicalLicenseNumber}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Ej. 123456"
+                        startContent={
+                          <FileText className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.medicalLicenseNumber &&
+                          formik.errors.medicalLicenseNumber
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
                       {formik.touched.medicalLicenseNumber &&
                         formik.errors.medicalLicenseNumber && (
                           <p className="text-xs text-rose-500 font-bold ml-1">
@@ -372,21 +372,27 @@ export default function CreateDoctorPage() {
                           </div>
                         ) : (
                           specialties.map((spec) => (
-                            <Button
+                            <button
                               key={spec.id}
                               type="button"
                               onClick={() => toggleSpecialty(spec.id)}
-                              className={`p-4 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-2 text-center group ${
+                              className={`p-5 rounded-2xl border text-sm font-bold transition-all flex flex-col items-center justify-center gap-3 text-center group cursor-pointer ${
                                 formik.values.specialtyIds.includes(spec.id)
-                                  ? "bg-celeste border-celeste text-white shadow-lg shadow-celeste/20"
-                                  : "bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-celeste/50"
+                                  ? "bg-celeste border-celeste text-white shadow-lg shadow-celeste/20 scale-[1.02]"
+                                  : "bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-celeste/50 hover:bg-celeste/[0.01]"
                               }`}
                             >
                               <Stethoscope
-                                className={`w-5 h-5 ${formik.values.specialtyIds.includes(spec.id) ? "text-white" : "text-zinc-400 group-hover:text-celeste"}`}
+                                className={`w-6 h-6 transition-transform group-hover:scale-110 ${
+                                  formik.values.specialtyIds.includes(spec.id)
+                                    ? "text-white"
+                                    : "text-zinc-400 group-hover:text-celeste"
+                                }`}
                               />
-                              <span className="line-clamp-1">{spec.name}</span>
-                            </Button>
+                              <span className="line-clamp-1 block w-full">
+                                {spec.name}
+                              </span>
+                            </button>
                           ))
                         )}
                       </div>
