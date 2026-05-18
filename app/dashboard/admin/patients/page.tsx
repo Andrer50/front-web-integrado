@@ -4,25 +4,40 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Filter,
-  MoreVertical,
   TrendingUp,
   ArrowLeft,
   ArrowRight,
   UserPlus,
   Search,
   Loader2,
+  Edit,
+  Trash2,
+  CheckCircle,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
+import { ChangeStatusDialog } from "@/presentation/dashboard/admin/patients/change-status-dialog";
+import { EditPatientDialog } from "@/presentation/dashboard/admin/patients/edit-patient-dialog";
 
 export default function AdminPatientsPage() {
   const [page, setPage] = useState(0);
   const [size] = useState(10);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string | undefined>(undefined);
+
+  /**
+   * State que maneja el paciente seleccionado para cambiar su estado o editar su información.
+   */
+  const [selectedPatient, setSelectedPatient] = useState<{
+    id: string;
+    status: string;
+  } | null>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editPatientId, setEditPatientId] = useState<string | null>(null);
 
   const {
     data: apiResponse,
@@ -160,16 +175,16 @@ export default function AdminPatientsPage() {
                 </TabsList>
 
                 <div className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      placeholder="Buscar paciente..."
-                      value={query}
-                      onChange={handleSearch}
-                      startContent={
-                        <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                      }
-                      className="h-auto py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus-visible:ring-celeste w-48 lg:w-64 font-medium"
-                    />
+                  <Input
+                    type="text"
+                    placeholder="Buscar paciente..."
+                    value={query}
+                    onChange={handleSearch}
+                    startContent={
+                      <Search className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                    }
+                    className="h-auto py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm focus-visible:ring-celeste w-48 lg:w-64 font-medium"
+                  />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -269,13 +284,40 @@ export default function AdminPatientsPage() {
                               </span>
                             </td>
                             <td className="px-8 py-6 text-right">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-zinc-400 hover:text-petroleo transition-colors rounded-xl"
-                              >
-                                <MoreVertical className="w-5 h-5" />
-                              </Button>
+                              <div className="flex items-center justify-end gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setEditPatientId(pat.id);
+                                    setShowEditModal(true);
+                                  }}
+                                  className="h-10 w-10 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all"
+                                  title="Editar Paciente"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedPatient({ id: pat.id, status: pat.status });
+                                    setShowStatusModal(true);
+                                  }}
+                                  className={`h-10 w-10 rounded-xl transition-all ${
+                                    pat.status === "ACTIVE"
+                                      ? "text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                      : "text-zinc-400 hover:text-green-500 hover:bg-green-50 dark:hover:bg-green-500/10"
+                                  }`}
+                                  title={pat.status === "ACTIVE" ? "Desactivar Paciente" : "Activar Paciente"}
+                                >
+                                  {pat.status === "ACTIVE" ? (
+                                    <Trash2 className="w-4 h-4" />
+                                  ) : (
+                                    <CheckCircle className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -352,6 +394,19 @@ export default function AdminPatientsPage() {
           </Tabs>
         </div>
       </div>
+
+      {/* Modales */}
+      <ChangeStatusDialog
+        open={showStatusModal}
+        onOpenChange={setShowStatusModal}
+        selectedPatient={selectedPatient}
+      />
+
+      <EditPatientDialog
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        patientId={editPatientId || ""}
+      />
     </div>
   );
 }
