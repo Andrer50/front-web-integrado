@@ -45,3 +45,54 @@ export const getPatientsAction = async (
     throw error;
   }
 };
+
+/**
+ * @description
+ * Cambiar el estado de un paciente (ACTIVE/INACTIVE)
+ */
+export const changePatientStatusAction = async (
+  patientId: string,
+  status: "ACTIVE" | "INACTIVE",
+) => {
+  try {
+    const { data } = await apiClient.patch<ApiResponse<PatientResponse>>(
+      `/api/v1/patients/${patientId}/status`,
+      null,
+      { params: { status } }
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+// Obtener un paciente por ID
+export const getPatientByIdAction = async (patientId: string) => {
+  try {
+    const { data } = await apiClient.get<ApiResponse<PatientResponse>>(
+      `/api/v1/patients/${patientId}`
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+// Actualizar paciente
+export const updatePatientAction = async (
+  patientId: string,
+  values: Partial<PatientRegisterRequest>
+) => {
+  try {
+    const { data } = await apiClient.put<ApiResponse<PatientResponse>>(
+      `/api/v1/patients/${patientId}`,
+      values
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
