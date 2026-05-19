@@ -20,7 +20,7 @@ export const useChangePatientStatus = () => {
       queryClient.invalidateQueries({ queryKey: ["patients"] }); // refresca la tabla
     },
     
-    onError: (error: any) => {
+    onError: (error) => {
       toast.error(error.message || "Error al cambiar el estado del paciente");
     },
   });
