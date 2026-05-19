@@ -61,9 +61,9 @@ export function DashboardNavbar({ onMenuClick }: DashboardNavbarProps) {
             </p>
           </div>
           <div className="w-10 h-10 rounded-full bg-zinc-200 dark:bg-zinc-800 flex items-center justify-center overflow-hidden border-2 border-white dark:border-zinc-800 shadow-sm">
-            {session?.user?.image ? (
+            {(session?.user as any)?.image ? (
               <img
-                src={session.user.image}
+                src={(session?.user as any)?.image}
                 alt="Profile"
                 className="w-full h-full object-cover"
               />

@@ -75,3 +75,45 @@ export interface AvailableDoctorSlotsResponse {
   modality: string;
   availableDates: DateGroup[];
 }
+
+export interface DoctorScheduleRequest {
+  id?: string;
+  dayOfWeek: string; // "MONDAY", "TUESDAY", etc.
+  startTime: string; // "HH:mm"
+  endTime: string; // "HH:mm"
+  consultingRoomId: string;
+  slotDurationMinutes: number;
+  isActive: boolean;
+}
+
+export interface DoctorScheduleResponse {
+  id: string;
+  doctorId: string;
+  dayOfWeek: string;
+  startTime: string;
+  endTime: string;
+  consultingRoomId: string;
+  consultingRoomNumber: string;
+  branchName: string;
+  slotDurationMinutes: number;
+  isActive: boolean;
+}
+
+export interface DoctorOffDayRequest {
+  id?: string;
+  offDate: string; // "YYYY-MM-DD"
+  reason?: string;
+}
+
+export interface DoctorOffDayResponse {
+  id: string;
+  doctorId: string;
+  offDate: string; // "YYYY-MM-DD"
+  reason?: string;
+}
+
+export interface DoctorOffDaySaveResponse {
+  offDay: DoctorOffDayResponse;
+  conflicts: AppointmentResponse[];
+}
+
