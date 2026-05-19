@@ -3,7 +3,7 @@ import { getSlotsByDoctorAction } from "@/core/appointment/actions";
 
 export const useDoctorSlots = (doctorId: string, startDate?: string) => {
   return useQuery({
-    queryKey: ["doctorSlots", doctorId, startDate],
+    queryKey: startDate ? ["doctorSlots", doctorId, startDate] : ["doctorSlots", doctorId],
     queryFn: () => getSlotsByDoctorAction(doctorId, startDate),
     enabled: !!doctorId,
     refetchOnWindowFocus: false,
