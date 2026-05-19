@@ -78,7 +78,7 @@ const doctorItems: SidebarItem[] = [
   },
   {
     title: "Consultas",
-    href: "/dashboard/doctor/consultations",
+    href: "/dashboard/doctor/my-consultations",
     icon: ClipboardList,
   },
 ];

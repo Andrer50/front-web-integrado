@@ -119,7 +119,7 @@ const authOptions: NextAuthOptions = {
         const decoded = jwt.decode(
           user.accessToken as string,
         ) as AuthenticateDecodeToken;
-        token.id = +user.id;
+        token.id = user.id;
         token.email = user.email;
         token.phone = user.phone;
         token.name = user.name;
@@ -139,7 +139,7 @@ const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       session.user = {
-        id: token.id as number,
+        id: token.id as string,
         email: token.email as string,
         phone: (token.phone as string) || "",
         name: token.name as string,
