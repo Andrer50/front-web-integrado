@@ -175,69 +175,75 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                 key={app.id}
                 className="rounded-[2.5rem] border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all group overflow-hidden"
               >
-                <CardContent className="p-6 flex flex-col lg:flex-row items-center gap-8">
-                  <div className="flex items-center gap-4 shrink-0 w-full lg:w-72">
-                    <div className="w-16 h-16 rounded-2xl overflow-hidden bg-blanco-azulado shrink-0 flex items-center justify-center text-celeste">
-                      <UserIcon className="w-8 h-8" />
+                <CardContent className="p-6 flex flex-col lg:flex-row items-center justify-between gap-8">
+                  {/* Doctor Info */}
+                  <div className="flex items-center gap-5 shrink-0 w-full lg:w-72">
+                    <div className="w-16 h-16 rounded-full overflow-hidden bg-zinc-100 dark:bg-zinc-800/50 shrink-0 flex items-center justify-center text-zinc-400 dark:text-zinc-500 border-[3px] border-white dark:border-zinc-950 shadow-sm">
+                      <UserIcon className="w-7 h-7" />
                     </div>
-                    <div>
-                      <h3 className="font-bold text-petroleo dark:text-white group-hover:text-celeste transition-colors">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-bold text-petroleo dark:text-white group-hover:text-celeste transition-colors truncate">
                         Dr. {app.doctorFirstName} {app.doctorLastName}
                       </h3>
-                      <p className="text-xs font-bold text-verde-salud">
+                      <p className="text-xs font-bold text-celeste truncate mt-0.5">
                         {app.doctorSpecialty}
                       </p>
-                      <p className="text-[10px] text-zinc-400 mt-1 font-bold uppercase tracking-wider">
+                      <p className="text-[10px] text-zinc-400 mt-1.5 font-bold uppercase tracking-wider">
                         CMP: {app.doctorMedicalLicenseNumber}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-8 flex-1 w-full">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blanco-azulado flex items-center justify-center text-celeste">
+                  {/* Appointment Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 flex-1 w-full">
+                    {/* Date */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center text-blue-500 dark:text-blue-400 shrink-0 shadow-sm shadow-blue-100/50 dark:shadow-none">
                         <Calendar className="w-5 h-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-petroleo dark:text-white">
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
                           {app.appointmentDate}
                         </p>
-                        <p className="text-xs text-zinc-500 font-medium">
+                        <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
                           Fecha de consulta
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blanco-azulado flex items-center justify-center text-tiffany">
+                    {/* Time */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-cyan-50 dark:bg-cyan-900/20 flex items-center justify-center text-cyan-500 dark:text-cyan-400 shrink-0 shadow-sm shadow-cyan-100/50 dark:shadow-none">
                         <Clock className="w-5 h-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-petroleo dark:text-white">
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
                           {app.appointmentTime
                             ? app.appointmentTime.substring(0, 5)
                             : "--:--"}
                         </p>
-                        <p className="text-xs text-zinc-500 font-medium">
+                        <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
                           Hora programada
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blanco-azulado flex items-center justify-center text-verde-salud">
+                    {/* Modality & Reason */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-[1.25rem] bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 shrink-0 shadow-sm shadow-emerald-100/50 dark:shadow-none">
                         <MapPin className="w-5 h-5" />
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-petroleo dark:text-white">
+                      <div className="min-w-0">
+                        <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
                           Presencial
                         </p>
-                        <p className="text-xs text-zinc-500 font-medium truncate max-w-[150px]">
+                        <p className="text-[11px] text-zinc-500 font-medium truncate max-w-[140px] mt-0.5">
                           {app.reason || "Consulta General"}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 w-full lg:w-auto justify-between lg:justify-end">
+                  {/* Actions & Status */}
+                  <div className="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end shrink-0 pl-0 lg:pl-4">
                     <span
                       className={`px-4 py-2 rounded-full text-[10px] font-bold tracking-widest border ${
                         app.status === "CONFIRMED"
@@ -256,7 +262,7 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="rounded-xl text-zinc-400 hover:text-petroleo"
+                      className="rounded-full text-zinc-400 hover:text-petroleo hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                     >
                       <MoreVertical className="w-5 h-5" />
                     </Button>
