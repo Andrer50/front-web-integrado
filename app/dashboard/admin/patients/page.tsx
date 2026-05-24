@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   CheckCircle,
+  Eye,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -285,6 +286,16 @@ export default function AdminPatientsPage() {
                             </td>
                             <td className="px-8 py-6 text-right">
                               <div className="flex items-center justify-end gap-2">
+                                <Link href={`/dashboard/admin/patients/${pat.id}`}>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-10 w-10 text-zinc-400 hover:text-celeste hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-all"
+                                    title="Ver Historial Médico"
+                                  >
+                                    <Eye className="w-4.5 h-4.5" />
+                                  </Button>
+                                </Link>
                                 <Button
                                   variant="ghost"
                                   size="icon"

@@ -11,6 +11,7 @@ export interface PatientResponse {
   lastName: string;
   gender: string;
   address: string;
+  medicalHistory?: string;
 }
 
 export interface PatientFilters {

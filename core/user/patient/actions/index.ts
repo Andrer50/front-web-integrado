@@ -96,3 +96,49 @@ export const updatePatientAction = async (
     throw error;
   }
 };
+
+export interface MedicalHistoryResponse {
+  patient: PatientResponse;
+  allergies: {
+    id: string;
+    patientId: string;
+    type: string;
+    severity: string;
+    reaction?: string;
+  }[];
+  prescriptions: {
+    id: string;
+    notes?: string;
+    issueDate: string;
+    items: {
+      id: string;
+      medicationName: string;
+      dosage: string;
+      frequency: string;
+      duration: string;
+      instructions?: string;
+    }[];
+  }[];
+  labOrders: {
+    id: string;
+    type: string;
+    name: string;
+    status: string;
+    orderedAt: string;
+    resultDetails?: string;
+    resultRecordedAt?: string;
+  }[];
+}
+
+// Obtener historial medico de un paciente
+export const getPatientMedicalHistoryAction = async (patientId: string) => {
+  try {
+    const { data } = await apiClient.get<ApiResponse<MedicalHistoryResponse>>(
+      `/api/v1/patients/${patientId}/medical-history`
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
