@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { usePatientMedicalHistory } from "@/modules/domain/user/patient/hooks/usePatientMedicalHistory";
+import type { MedicalHistoryResponse } from "@/core/user/patient/actions";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Spinner } from "@/components/ui/spinner";
 import {
   ArrowLeft,
-  Calendar,
   Phone,
   Mail,
   MapPin,
@@ -16,14 +16,18 @@ import {
   FlaskConical,
   Pill,
   Clock,
-  User,
-  Heart,
   FileText,
-  Activity,
-  Layers,
   FileHeart,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+
+const EMPTY_ARRAY: never[] = [];
+
+type Prescription = MedicalHistoryResponse["prescriptions"][number];
+type LabOrder = MedicalHistoryResponse["labOrders"][number];
+type TimelineItem =
+  | { type: "prescription"; date: string; data: Prescription }
+  | { type: "labOrder"; date: string; data: LabOrder };
 
 export default function PatientProfilePage() {
   const params = useParams();
@@ -36,11 +40,11 @@ export default function PatientProfilePage() {
   const medicalHistory = medicalHistoryRes?.data;
   const patient = medicalHistory?.patient;
   const allergies = medicalHistory?.allergies || [];
-  const prescriptions = medicalHistory?.prescriptions || [];
-  const labOrders = medicalHistory?.labOrders || [];
+  const prescriptions = medicalHistory?.prescriptions ?? EMPTY_ARRAY;
+  const labOrders = medicalHistory?.labOrders ?? EMPTY_ARRAY;
 
   // Calculate age from birthDate
-  const age = useMemo(() => {
+  const age = (() => {
     if (!patient?.birthDate) return null;
     const birthDate = new Date(patient.birthDate);
     const today = new Date();
@@ -50,14 +54,11 @@ export default function PatientProfilePage() {
       age--;
     }
     return age;
-  }, [patient?.birthDate]);
+  })();
 
   // Combine prescriptions and lab orders into a single sorted timeline
   const timelineItems = useMemo(() => {
-    const items: Array<
-      | { type: "prescription"; date: string; data: any }
-      | { type: "labOrder"; date: string; data: any }
-    > = [];
+    const items: TimelineItem[] = [];
 
     prescriptions.forEach((p) => {
       items.push({
@@ -332,7 +333,7 @@ export default function PatientProfilePage() {
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
-                                  {item.data.items?.map((med: any, mIdx: number) => (
+                                  {item.data.items?.map((med, mIdx) => (
                                     <tr key={mIdx}>
                                       <td className="px-4 py-3 font-bold text-petroleo dark:text-white">{med.medicationName}</td>
                                       <td className="px-4 py-3 font-semibold text-zinc-600 dark:text-zinc-400">{med.dosage}</td>
@@ -483,7 +484,7 @@ export default function PatientProfilePage() {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-zinc-50 dark:divide-zinc-850">
-                            {presc.items?.map((med: any, mIdx: number) => (
+                            {presc.items?.map((med, mIdx) => (
                               <tr key={mIdx}>
                                 <td className="px-4 py-3 font-bold text-petroleo dark:text-white">{med.medicationName}</td>
                                 <td className="px-4 py-3 font-semibold text-zinc-600 dark:text-zinc-400">{med.dosage}</td>
