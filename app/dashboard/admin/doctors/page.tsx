@@ -13,6 +13,7 @@ import {
   Calendar,
   Pencil,
   Power,
+  PowerOff,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -362,7 +363,11 @@ export default function AdminDoctorsPage() {
                                       : "Activar Doctor"
                                   }
                                 >
-                                  <Power className="w-4 h-4" />
+                                  {doc.user.status === "ACTIVE" ? (
+                                    <PowerOff className="w-4 h-4" />
+                                  ) : (
+                                    <Power className="w-4 h-4" />
+                                  )}
                                 </Button>
                               </div>
                             </td>
