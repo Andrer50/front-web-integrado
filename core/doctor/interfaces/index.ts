@@ -12,6 +12,15 @@ export interface DoctorRequest {
   specialtyIds: string[];
 }
 
+export interface DoctorUpdateRequest {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  medicalLicenseNumber: string;
+  bio: string;
+  specialtyIds: string[];
+}
+
 export interface DoctorResponse {
   id: string;
   medicalLicenseNumber: string;

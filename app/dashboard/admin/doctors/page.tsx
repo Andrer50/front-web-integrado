@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Calendar,
   Pencil,
+  Power,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -26,11 +27,22 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { EditDoctorDialog } from "@/presentation/dashboard/admin/doctors/edit-doctor-dialog";
+import { ChangeDoctorStatusDialog } from "@/presentation/dashboard/admin/doctors/change-doctor-status-dialog";
 
 export default function AdminDoctorsPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<string | null>(null);
+  const [selectedDoctorForStatus, setSelectedDoctorForStatus] = useState<{
+    id: string;
+    status: string;
+    firstName: string;
+    lastName: string;
+  } | null>(null);
   const size = 10;
 
   const { data: doctorsResponse, isLoading } = useDoctors({
@@ -318,15 +330,39 @@ export default function AdminDoctorsPage() {
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={() =>
-                                    router.push(
-                                      `/dashboard/admin/doctors/edit/${doc.id}`,
-                                    )
-                                  }
+                                  onClick={() => {
+                                    setSelectedDoctor(doc.id);
+                                    setEditDialogOpen(true);
+                                  }}
                                   className="h-10 w-10 text-zinc-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 rounded-xl transition-all"
-                                  title="Editar Médico"
+                                  title="Editar Doctor"
                                 >
                                   <Pencil className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setSelectedDoctorForStatus({
+                                      id: doc.id,
+                                      status: doc.user.status,
+                                      firstName: doc.user.firstName,
+                                      lastName: doc.user.lastName,
+                                    });
+                                    setStatusDialogOpen(true);
+                                  }}
+                                  className={`h-10 w-10 rounded-xl transition-all ${
+                                    doc.user.status === "ACTIVE"
+                                      ? "text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10"
+                                      : "text-zinc-400 hover:text-verde-salud hover:bg-verde-salud/10 dark:hover:bg-verde-salud/20"
+                                  }`}
+                                  title={
+                                    doc.user.status === "ACTIVE"
+                                      ? "Desactivar Doctor"
+                                      : "Activar Doctor"
+                                  }
+                                >
+                                  <Power className="w-4 h-4" />
                                 </Button>
                               </div>
                             </td>
@@ -394,6 +430,21 @@ export default function AdminDoctorsPage() {
           </Tabs>
         </div>
       </div>
+
+      {/* Diálogos */}
+      {selectedDoctor && (
+        <EditDoctorDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          doctorId={selectedDoctor}
+        />
+      )}
+
+      <ChangeDoctorStatusDialog
+        open={statusDialogOpen}
+        onOpenChange={setStatusDialogOpen}
+        selectedDoctor={selectedDoctorForStatus}
+      />
     </div>
   );
 }
