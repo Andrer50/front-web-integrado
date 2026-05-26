@@ -1,6 +1,27 @@
+import { Status } from "@/core/shared";
+
+export interface PatientResponse {
+  id: string;
+  email: string;
+  status: Status;
+  phone: string;
+  birthDate: string;
+  documentNumber: string;
+  firstName: string;
+  lastName: string;
+  gender: string;
+  address: string;
+  medicalHistory?: string;
+}
+
+export interface PatientFilters {
+  query?: string;
+  status?: string;
+  userId?: string;
+}
+
 export interface PatientRegisterResponse {
   email: string;
-  password: string;
   phone: string;
   birthDate: string;
   documentNumber: string;
@@ -16,4 +37,6 @@ export interface PatientRegisterRequest {
   phone: string;
   birthDate: string;
   documentNumber: string;
+  gender?: string;
+  address?: string;
 }

@@ -58,6 +58,16 @@ export class HttpClient {
       async (config: InternalAxiosRequestConfig) => {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
+        } else if (typeof window !== "undefined") {
+          try {
+            const { getSession } = await import("next-auth/react");
+            const session = await getSession();
+            if (session?.accessToken) {
+              config.headers.Authorization = `Bearer ${session.accessToken}`;
+            }
+          } catch (error) {
+            console.error("Error al obtener la sesión de NextAuth en HttpClient:", error);
+          }
         }
 
         return config;

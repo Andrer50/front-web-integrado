@@ -1,7 +1,7 @@
 import { type Role, type Status } from "@/core/shared";
 
 export interface User {
-  id: number;
+  id: string;
   authId: string;
   firstName: string;
   lastName: string;
