@@ -30,7 +30,6 @@ export const patientUpdateValidationSchema = Yup.object({
   lastName: Yup.string()
     .matches(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, "Solo se permiten letras")
     .required("Requerido"),
-  email: Yup.string().email("Email inválido").required("Requerido"),
   documentNumber: Yup.string()
     .matches(/^[0-9]{8}$/, "DNI debe tener 8 dígitos")
     .required("Requerido"),

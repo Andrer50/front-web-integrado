@@ -24,9 +24,9 @@ import {
 import { useEditPatient } from "@/modules/domain/user/patient/hooks/useEditPatient";
 import { patientUpdateValidationSchema } from "@/modules/features/user/patient/validations";
 /**
- * Componente de diálogo para editar la información de un paciente. 
- * Permite modificar campos como nombre, apellido, email, teléfono, fecha de nacimiento, DNI, género y dirección. 
- * Utiliza Formik para el manejo del formulario y validaciones con Yup. 
+ * Componente de diálogo para editar la información de un paciente.
+ * Permite modificar campos como nombre, apellido, email, teléfono, fecha de nacimiento, DNI, género y dirección.
+ * Utiliza Formik para el manejo del formulario y validaciones con Yup.
  * Al abrir el diálogo, se cargan los datos actuales del paciente y al guardar se actualizan en el backend.
  */
 
@@ -164,17 +164,10 @@ export function EditPatientDialog({
                 name="email"
                 type="email"
                 value={formik.values.email}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                className="h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 focus-visible:ring-celeste font-semibold text-zinc-700 dark:text-zinc-300"
+                disabled
+                className="h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 font-semibold text-zinc-400 cursor-not-allowed"
               />
-              {formik.touched.email && formik.errors.email && (
-                <p className="text-red-500 text-xs font-semibold">
-                  {formik.errors.email}
-                </p>
-              )}
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label
