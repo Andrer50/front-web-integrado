@@ -22,8 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEditPatient } from "@/modules/domain/user/patient/hooks/useEditPatient";
-import { patientValidationSchema } from "@/modules/features/user/patient/validations";
-
+import { patientUpdateValidationSchema } from "@/modules/features/user/patient/validations";
 /**
  * Componente de diálogo para editar la información de un paciente. 
  * Permite modificar campos como nombre, apellido, email, teléfono, fecha de nacimiento, DNI, género y dirección. 
@@ -58,7 +57,7 @@ export function EditPatientDialog({
       gender: "",
       address: "",
     },
-    validationSchema: patientValidationSchema,
+    validationSchema: patientUpdateValidationSchema,
     onSubmit: (values) => {
       mutate(values, {
         onSuccess: () => onOpenChange(false),
