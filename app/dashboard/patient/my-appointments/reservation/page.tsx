@@ -37,7 +37,7 @@ import { useBranches } from "@/modules/domain/branch/hooks/useBranches";
 import { useSpecialties } from "@/modules/domain/specialty/hooks/useSpecialties";
 import { useAvailableDoctorSlots } from "@/modules/domain/appointment/hooks/useAvailableDoctorSlots";
 import { useCreateAppointment } from "@/modules/domain/appointment/hooks/useAppointments";
-import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
+import { usePatientByUserId } from "@/modules/domain/user/patient/hooks/usePatientByUserId";
 
 export default function ReservationPage() {
   const router = useRouter();
@@ -45,10 +45,10 @@ export default function ReservationPage() {
   const userId = session?.user?.id;
 
   // 1. Obtener detalles del Paciente
-  const { data: patientData, isLoading: isLoadingPatient } = usePatients(
-    userId ? { userId: String(userId), size: 1 } : {},
+  const { data: patientData, isLoading: isLoadingPatient } = usePatientByUserId(
+    userId ? String(userId) : "",
   );
-  const patient = patientData?.data?.content?.[0];
+  const patient = patientData?.data;
   const patientId = patient?.id;
 
   // 2. Obtener sedes y especialidades dinámicas del backend
@@ -130,7 +130,10 @@ export default function ReservationPage() {
     if (!selectedSpecialtyId) return;
     setSearchParams({
       specialtyId: selectedSpecialtyId,
-      branchId: (selectedSedeId === "all" || !selectedSedeId) ? undefined : selectedSedeId,
+      branchId:
+        selectedSedeId === "all" || !selectedSedeId
+          ? undefined
+          : selectedSedeId,
     });
     setHasSearched(true);
   };

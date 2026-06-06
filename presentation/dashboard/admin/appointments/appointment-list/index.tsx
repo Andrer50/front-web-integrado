@@ -250,13 +250,17 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                           ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
                           : app.status === "PENDING"
                             ? "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30"
-                            : "bg-red-50 text-red-600 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30"
+                            : app.status === "COMPLETED"
+                              ? "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30"
+                              : "bg-red-50 text-red-600 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30"
                       }`}
                     >
                       {app.status === "CONFIRMED"
                         ? "CONFIRMADA"
                         : app.status === "PENDING"
                           ? "PENDIENTE"
+                          : app.status === "COMPLETED" ?
+                          "COMPLETADO"
                           : "CANCELADA"}
                     </span>
                     <Button

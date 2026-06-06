@@ -1,0 +1,44 @@
+# Dependencias locales
+node_modules/
+.pnpm-store/
+
+# Directorios de compilación y caché de Next.js
+.next/
+out/
+build/
+.next/cache/
+
+# Archivos de entorno y configuración local (los valores se inyectan en Compose)
+.env
+.env.*
+!.env.example
+
+# Configuración de editores e IDEs
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Archivos de log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archivos de Docker y control de versiones
+Dockerfile
+docker-compose.yml
+deploy/
+.git/
+.gitignore
+.dockerignore
+README.md
+
+# Archivos temporales o de compilación TypeScript
+*.tsbuildinfo
+
