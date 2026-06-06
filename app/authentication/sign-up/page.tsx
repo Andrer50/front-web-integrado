@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,20 @@ import { getSession } from "next-auth/react";
 
 
 export default function SignUpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f3f4f6] flex items-center justify-center p-4">
+          Cargando...
+        </div>
+      }
+    >
+      <SignUpForm />
+    </Suspense>
+  );
+}
+
+function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
