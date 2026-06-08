@@ -9,8 +9,6 @@ build/
 .next/cache/
 
 # Archivos de entorno y configuración local (los valores se inyectan en Compose)
-.env
-.env.*
 !.env.example
 
 # Configuración de editores e IDEs
