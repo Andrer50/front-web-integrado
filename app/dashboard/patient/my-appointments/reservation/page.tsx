@@ -37,34 +37,20 @@ import { useBranches } from "@/modules/domain/branch/hooks/useBranches";
 import { useSpecialties } from "@/modules/domain/specialty/hooks/useSpecialties";
 import { useAvailableDoctorSlots } from "@/modules/domain/appointment/hooks/useAvailableDoctorSlots";
 import { useCreateAppointment } from "@/modules/domain/appointment/hooks/useAppointments";
-import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
 
 export default function ReservationPage() {
   const router = useRouter();
-  const { data: session } = useSession();
-  const userId = session?.user?.id;
-
-  // 1. Obtener detalles del Paciente
-  const { data: patientData, isLoading: isLoadingPatient } = usePatients(
-    userId ? { userId: String(userId), size: 1 } : {},
-  );
-  const patient = patientData?.data?.content?.[0];
-  const patientId = patient?.id;
 
   // 2. Obtener sedes y especialidades dinámicas del backend
   const { data: branchesData, isLoading: isLoadingBranches } = useBranches();
-  const branches = useMemo(() => {
-    return branchesData?.data || [];
-  }, [branchesData]);
+  const branches = useMemo(() => branchesData?.data || [], [branchesData]);
 
   const { data: specialtiesData, isLoading: isLoadingSpecialties } =
-    useSpecialties({
-      page: 0,
-      size: 100,
-    });
-  const specialties = useMemo(() => {
-    return specialtiesData?.data?.content || [];
-  }, [specialtiesData]);
+    useSpecialties({ page: 0, size: 100 });
+  const specialties = useMemo(
+    () => specialtiesData?.data?.content || [],
+    [specialtiesData],
+  );
 
   // Estados de los Filtros
   const [selectedSedeId, setSelectedSedeId] = useState<string>("");
@@ -79,15 +65,14 @@ export default function ReservationPage() {
   const { data: slotsRes, isLoading: isLoadingSlots } = useAvailableDoctorSlots(
     searchParams || { specialtyId: "" },
   );
-  const availableSlots = useMemo(() => {
-    return slotsRes?.data || [];
-  }, [slotsRes]);
+  const availableSlots = useMemo(() => slotsRes?.data || [], [slotsRes]);
 
   // Estados para Selección de Doctor, Día y Hora
   const [selectedDaysByDoctor, setSelectedDaysByDoctor] = useState<
     Record<string, string>
-  >({}); // doctorId -> dateStr
+  >({});
   const [selectedSlot, setSelectedSlot] = useState<{
+    slotId: string; // ← el ID real del slot para enviar al backend
     doctorId: string;
     dateStr: string;
     timeStr: string;
@@ -115,9 +100,10 @@ export default function ReservationPage() {
   });
 
   // Especialidad seleccionada para mostrar textos dinámicos
-  const selectedSpecialtyName = useMemo(() => {
-    return specialties.find((s) => s.id === selectedSpecialtyId)?.name || "";
-  }, [specialties, selectedSpecialtyId]);
+  const selectedSpecialtyName = useMemo(
+    () => specialties.find((s) => s.id === selectedSpecialtyId)?.name || "",
+    [specialties, selectedSpecialtyId],
+  );
 
   // Doctor seleccionado para la reserva final
   const activeBookingDoctor = useMemo(() => {
@@ -130,37 +116,40 @@ export default function ReservationPage() {
     if (!selectedSpecialtyId) return;
     setSearchParams({
       specialtyId: selectedSpecialtyId,
-      branchId: (selectedSedeId === "all" || !selectedSedeId) ? undefined : selectedSedeId,
+      branchId:
+        selectedSedeId === "all" || !selectedSedeId
+          ? undefined
+          : selectedSedeId,
     });
     setHasSearched(true);
   };
 
-  // Manejar selección de horario
+  // Manejar selección de horario — ahora recibe slotId
   const handleSlotClick = (
     doctorId: string,
     dateStr: string,
     timeStr: string,
+    slotId: string,
   ) => {
-    setSelectedSlot({ doctorId, dateStr, timeStr });
+    setSelectedSlot({ slotId, doctorId, dateStr, timeStr });
     setIsConfirmDialogOpen(true);
     setErrorMsg("");
   };
 
-  // Enviar reserva al backend
+  // Enviar reserva al backend — solo slotId + reason
   const handleConfirmReservation = () => {
-    if (!selectedSlot || !patientId) return;
+    if (!selectedSlot) return;
 
-    let formattedTime = selectedSlot.timeStr;
-    if (formattedTime.split(":").length === 2) {
-      formattedTime += ":00";
+    if (!reason.trim() || reason.trim().length < 5) {
+      setErrorMsg(
+        "El motivo de la consulta es obligatorio (mínimo 5 caracteres).",
+      );
+      return;
     }
 
     createAppointmentMutation.mutate({
-      patientId,
-      doctorId: selectedSlot.doctorId,
-      appointmentDate: selectedSlot.dateStr,
-      appointmentTime: formattedTime,
-      reason: reason || "Consulta médica general",
+      slotId: selectedSlot.slotId,
+      reason: reason.trim(),
     });
   };
 
@@ -259,10 +248,7 @@ export default function ReservationPage() {
       </Card>
 
       {/* Resultados de la búsqueda */}
-      {isLoadingSlots ||
-      isLoadingPatient ||
-      isLoadingBranches ||
-      isLoadingSpecialties ? (
+      {isLoadingSlots || isLoadingBranches || isLoadingSpecialties ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
           <Spinner className="w-10 h-10 text-celeste" />
           <p className="text-zinc-500 font-bold text-sm">
@@ -303,7 +289,6 @@ export default function ReservationPage() {
 
           <div className="space-y-8">
             {availableSlots.map((doc) => {
-              // Obtener la fecha seleccionada activa para este doctor (por defecto la primera fecha disponible)
               const selectedDateStr =
                 selectedDaysByDoctor[doc.doctorId] ||
                 doc.availableDates?.[0]?.date;
@@ -311,7 +296,6 @@ export default function ReservationPage() {
                 (d) => d.date === selectedDateStr,
               );
 
-              // Generar iniciales del médico
               const initials = doc.doctorName
                 ? doc.doctorName
                     .replace(/Dr\./g, "")
@@ -331,7 +315,6 @@ export default function ReservationPage() {
                 >
                   {/* Bloque Izquierdo: Datos del Médico */}
                   <div className="flex flex-col sm:flex-row gap-6 w-full xl:w-[40%]">
-                    {/* Foto de perfil */}
                     <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-celeste/20 to-blue-50 dark:to-zinc-900/40 flex items-center justify-center text-celeste font-bold text-3xl shadow-inner shrink-0 border border-celeste/10 relative">
                       {initials}
                       <div className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-white dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 flex items-center justify-center">
@@ -349,11 +332,9 @@ export default function ReservationPage() {
                       <p className="text-xs text-zinc-400 dark:text-zinc-500 font-bold">
                         CMP {doc.cmp || "82144"}
                       </p>
-
                       <div className="inline-flex px-3 py-1.5 rounded-xl bg-celeste/10 text-celeste text-xs font-black uppercase tracking-wider">
                         {doc.modality || "Presencial"}
                       </div>
-
                       <div className="pt-2 border-t border-zinc-100 dark:border-zinc-900 space-y-1.5">
                         <p className="text-xs font-black text-petroleo dark:text-zinc-300">
                           Sede {doc.branchName}
@@ -413,24 +394,23 @@ export default function ReservationPage() {
                         Horas disponibles para el día elegido:
                       </p>
                       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-                        {activeDaySchedule?.slots.map((slot) => {
-                          return (
-                            <button
-                              key={slot.slotId}
-                              type="button"
-                              onClick={() =>
-                                handleSlotClick(
-                                  doc.doctorId,
-                                  selectedDateStr,
-                                  slot.time,
-                                )
-                              }
-                              className="py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-celeste bg-white dark:bg-zinc-900 hover:bg-celeste/5 text-xs font-black text-zinc-700 dark:text-zinc-300 hover:text-celeste cursor-pointer text-center transition-all shadow-sm"
-                            >
-                              {slot.time}
-                            </button>
-                          );
-                        })}
+                        {activeDaySchedule?.slots.map((slot) => (
+                          <button
+                            key={slot.slotId}
+                            type="button"
+                            onClick={() =>
+                              handleSlotClick(
+                                doc.doctorId,
+                                selectedDateStr,
+                                slot.time,
+                                slot.slotId,
+                              )
+                            }
+                            className="py-3 px-4 rounded-xl border border-zinc-200 dark:border-zinc-800 hover:border-celeste bg-white dark:bg-zinc-900 hover:bg-celeste/5 text-xs font-black text-zinc-700 dark:text-zinc-300 hover:text-celeste cursor-pointer text-center transition-all shadow-sm"
+                          >
+                            {slot.time}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -478,7 +458,6 @@ export default function ReservationPage() {
                     </p>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-2 gap-4 border-t border-zinc-100 dark:border-zinc-900 pt-4">
                   <div>
                     <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest">
@@ -506,13 +485,16 @@ export default function ReservationPage() {
                   className="font-bold text-petroleo dark:text-zinc-300"
                 >
                   Motivo de la consulta{" "}
-                  <span className="text-zinc-400 font-medium">(Opcional)</span>
+                  <span className="text-red-400 font-medium">*</span>
                 </Label>
                 <textarea
                   id="reason"
                   placeholder="Ej: Control de rutina, dolor persistente, etc."
                   value={reason}
-                  onChange={(e) => setReason(e.target.value)}
+                  onChange={(e) => {
+                    setReason(e.target.value);
+                    if (errorMsg) setErrorMsg("");
+                  }}
                   className="w-full rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 focus-visible:ring-celeste h-24 text-sm p-4 outline-none focus:ring-2 focus:ring-celeste"
                 />
               </div>
