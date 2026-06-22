@@ -1,11 +1,10 @@
 import { PaginationParams } from "@/core/shared";
 
 export interface AppointmentRequest {
-  patientId: string;
-  doctorId: string;
-  appointmentDate: string; // "YYYY-MM-DD"
-  appointmentTime: string; // "HH:mm"
-  reason?: string;
+  slotId: string;
+  reason: string;
+  patientId?: string; // Solo se envía cuando crea la cita un ADMIN
+
 }
 
 export interface AppointmentResponse {
@@ -20,7 +19,7 @@ export interface AppointmentResponse {
   doctorMedicalLicenseNumber: string;
   appointmentDate: string; // "YYYY-MM-DD"
   appointmentTime: string; // "HH:mm"
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
+  status: string;
   reason?: string;
 }
 
@@ -116,4 +115,11 @@ export interface DoctorOffDaySaveResponse {
   offDay: DoctorOffDayResponse;
   conflicts: AppointmentResponse[];
 }
+
+export interface AvailableSlotsFilters {
+  specialtyId: string;
+  startDate?: string; // "2026-06-22"
+  endDate?: string;
+}
+
 
