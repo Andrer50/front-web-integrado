@@ -6,30 +6,15 @@ import {
   AppointmentFilters,
   GenerateSlotsRequest,
   DoctorScheduleSlotResponse,
-  AvailableDoctorSlotsResponse,
   DoctorScheduleRequest,
   DoctorScheduleResponse,
   DoctorOffDayRequest,
   DoctorOffDayResponse,
   DoctorOffDaySaveResponse,
+  AvailableDoctorSlotsResponse,
+  AvailableSlotsFilters,
 } from "../interfaces";
 
-/**
- * @description
- * Crear una cita médica
- */
-export const createAppointmentAction = async (values: AppointmentRequest) => {
-  try {
-    const { data } = await apiClient.post<ApiResponse<AppointmentResponse>>(
-      "/api/v1/appointments",
-      values,
-    );
-    return data;
-  } catch (error) {
-    console.error(error);
-    throw error;
-  }
-};
 
 /**
  * @description
@@ -185,3 +170,39 @@ export const deleteOffDayAction = async (offDayId: string) => {
   }
 };
 
+
+/**
+ * @description
+ * Crear una cita.
+ * - Si el usuario autenticado es PATIENT: el paciente se resuelve en backend a partir del JWT.
+ * - Si el usuario autenticado es ADMIN: debe enviar `patientId` en el request para indicar a qué paciente se le agenda la cita.
+ */
+export const createAppointmentAction = async (
+  request: AppointmentRequest,
+) => {
+  try {
+    const { data } = await apiClient.post<ApiResponse<AppointmentResponse>>(
+      "/api/v1/appointments",
+      request,
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};
+
+export const changeAppointmentStatusAction = async (
+  appointmentId: string,
+  status: string,
+) => {
+  try {
+    const { data } = await apiClient.patch<ApiResponse<AppointmentResponse>>(
+      `/api/v1/appointments/${appointmentId}/status`,
+      { status },
+    );
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};

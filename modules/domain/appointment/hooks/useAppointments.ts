@@ -3,10 +3,10 @@ import {
   getAppointmentsAction,
   createAppointmentAction,
 } from "@/core/appointment/actions";
-import { 
-  AppointmentFilters, 
-  AppointmentRequest, 
-  AppointmentResponse 
+import {
+  AppointmentFilters,
+  AppointmentRequest,
+  AppointmentResponse,
 } from "@/core/appointment/interfaces";
 import { type ApiResponse } from "@/core/shared";
 import { toast } from "sonner";
@@ -35,6 +35,7 @@ export const useCreateAppointment = ({
     onSuccess: () => {
       toast.success("Cita médica agendada con éxito");
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["availableDoctorSlots"] });
       onSuccess?.();
     },
     onError: (error: Error) => {
