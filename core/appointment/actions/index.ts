@@ -15,7 +15,6 @@ import {
   AvailableSlotsFilters,
 } from "../interfaces";
 
-
 /**
  * @description
  * Obtener citas médicas paginadas con filtros
@@ -34,12 +33,13 @@ export const getAppointmentsAction = async (params: AppointmentFilters) => {
 /**
  * Generar slots de horario para un médico
  */
-export const generateScheduleSlotsAction = async (request: GenerateSlotsRequest) => {
+export const generateScheduleSlotsAction = async (
+  request: GenerateSlotsRequest,
+) => {
   try {
-    const { data } = await apiClient.post<ApiResponse<DoctorScheduleSlotResponse[]>>(
-      "/api/v1/schedules/generate",
-      request,
-    );
+    const { data } = await apiClient.post<
+      ApiResponse<DoctorScheduleSlotResponse[]>
+    >("/api/v1/schedules/generate", request);
     return data;
   } catch (error) {
     console.error("Error in generateScheduleSlotsAction:", error);
@@ -57,10 +57,9 @@ export const getAvailableDoctorSlotsAction = async (params: {
   endDate?: string;
 }) => {
   try {
-    const { data } = await apiClient.get<ApiResponse<AvailableDoctorSlotsResponse[]>>(
-      "/api/v1/schedules/available-slots",
-      { params },
-    );
+    const { data } = await apiClient.get<
+      ApiResponse<AvailableDoctorSlotsResponse[]>
+    >("/api/v1/schedules/available-slots", { params });
     return data;
   } catch (error) {
     console.error("Error in getAvailableDoctorSlotsAction:", error);
@@ -76,10 +75,9 @@ export const getSlotsByDoctorAction = async (
   startDate?: string,
 ) => {
   try {
-    const { data } = await apiClient.get<ApiResponse<DoctorScheduleSlotResponse[]>>(
-      `/api/v1/schedules/doctor/${doctorId}`,
-      { params: { startDate } },
-    );
+    const { data } = await apiClient.get<
+      ApiResponse<DoctorScheduleSlotResponse[]>
+    >(`/api/v1/schedules/doctor/${doctorId}`, { params: { startDate } });
     return data;
   } catch (error) {
     console.error("Error in getSlotsByDoctorAction:", error);
@@ -110,10 +108,9 @@ export const saveWeeklyConfigAction = async (
   request: DoctorScheduleRequest[],
 ) => {
   try {
-    const { data } = await apiClient.post<ApiResponse<DoctorScheduleResponse[]>>(
-      `/api/v1/schedules/doctor/${doctorId}/weekly-config`,
-      request,
-    );
+    const { data } = await apiClient.post<
+      ApiResponse<DoctorScheduleResponse[]>
+    >(`/api/v1/schedules/doctor/${doctorId}/weekly-config`, request);
     return data;
   } catch (error) {
     console.error("Error in saveWeeklyConfigAction:", error);
@@ -144,10 +141,9 @@ export const saveOffDayAction = async (
   request: DoctorOffDayRequest,
 ) => {
   try {
-    const { data } = await apiClient.post<ApiResponse<DoctorOffDaySaveResponse>>(
-      `/api/v1/schedules/doctor/${doctorId}/off-days`,
-      request,
-    );
+    const { data } = await apiClient.post<
+      ApiResponse<DoctorOffDaySaveResponse>
+    >(`/api/v1/schedules/doctor/${doctorId}/off-days`, request);
     return data;
   } catch (error) {
     console.error("Error in saveOffDayAction:", error);
@@ -170,16 +166,13 @@ export const deleteOffDayAction = async (offDayId: string) => {
   }
 };
 
-
 /**
  * @description
  * Crear una cita.
  * - Si el usuario autenticado es PATIENT: el paciente se resuelve en backend a partir del JWT.
  * - Si el usuario autenticado es ADMIN: debe enviar `patientId` en el request para indicar a qué paciente se le agenda la cita.
  */
-export const createAppointmentAction = async (
-  request: AppointmentRequest,
-) => {
+export const createAppointmentAction = async (request: AppointmentRequest) => {
   try {
     const { data } = await apiClient.post<ApiResponse<AppointmentResponse>>(
       "/api/v1/appointments",
