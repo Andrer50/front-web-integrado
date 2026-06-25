@@ -27,13 +27,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAppointments } from "@/modules/domain/appointment/hooks/useAppointments";
 import { useChangeAppointmentStatus } from "@/modules/domain/appointment/hooks/useChangeAppointmentStatus";
-import { CreateAppointmentDialog } from "@/presentation/dashboard/admin/appointments/create-appointment-dialog"
+import { CreateAppointmentDialog } from "@/presentation/dashboard/admin/appointments/create-appointment-dialog";
+import { ViewConsultationDialog } from "@/presentation/dashboard/admin/appointments/view-consultation-dialog";
 
 const STATUS_STYLE: Record<string, string> = {
-  CONFIRMED: "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400",
-  PENDING: "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400",
-  COMPLETED: "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400",
-  CANCELLED: "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400",
+  CONFIRMED:
+    "bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400",
+  PENDING:
+    "bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-900/20 dark:text-amber-400",
+  COMPLETED:
+    "bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-900/20 dark:text-blue-400",
+  CANCELLED:
+    "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/20 dark:text-red-400",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -48,6 +53,10 @@ export default function AdminAppointmentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(0);
   const size = 10;
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   const { data, isLoading } = useAppointments({
     status: tab === "PENDING" ? "PENDING" : undefined,
@@ -55,8 +64,11 @@ export default function AdminAppointmentsPage() {
     size,
   });
 
-  const { mutate: changeStatus, isPending: isChanging, variables } =
-    useChangeAppointmentStatus();
+  const {
+    mutate: changeStatus,
+    isPending: isChanging,
+    variables,
+  } = useChangeAppointmentStatus();
 
   const appointments = data?.data?.content || [];
   const totalPages = data?.data?.totalPages || 0;
@@ -64,7 +76,8 @@ export default function AdminAppointmentsPage() {
 
   const filtered = appointments.filter((app) => {
     if (!searchQuery) return true;
-    const patient = `${app.patientFirstName} ${app.patientLastName}`.toLowerCase();
+    const patient =
+      `${app.patientFirstName} ${app.patientLastName}`.toLowerCase();
     const doctor = `${app.doctorFirstName} ${app.doctorLastName}`.toLowerCase();
     return (
       patient.includes(searchQuery.toLowerCase()) ||
@@ -75,12 +88,48 @@ export default function AdminAppointmentsPage() {
   const totalToday = appointments.filter(
     (a) => a.appointmentDate === new Date().toISOString().split("T")[0],
   ).length;
-  const totalPending = appointments.filter((a) => a.status === "PENDING").length;
-  const totalConfirmed = appointments.filter((a) => a.status === "CONFIRMED").length;
-  const totalCancelled = appointments.filter((a) => a.status === "CANCELLED").length;
+  const totalPending = appointments.filter(
+    (a) => a.status === "PENDING",
+  ).length;
+  const totalConfirmed = appointments.filter(
+    (a) => a.status === "CONFIRMED",
+  ).length;
+  const totalCancelled = appointments.filter(
+    (a) => a.status === "CANCELLED",
+  ).length;
 
   const renderActions = (app: (typeof appointments)[number]) => {
     const isThisChanging = isChanging && variables?.appointmentId === app.id;
+
+    if (app.status === "COMPLETED") {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-zinc-400 hover:text-petroleo rounded-xl"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800"
+          >
+            <DropdownMenuItem
+              onClick={() => {
+                setSelectedAppointmentId(app.id);
+                setIsViewOpen(true);
+              }}
+              className="cursor-pointer font-semibold text-sm focus:bg-celeste/10 focus:text-celeste"
+            >
+              Ver Consulta
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
 
     const options: { label: string; status: string }[] = [];
     if (app.status === "PENDING") {
@@ -94,7 +143,12 @@ export default function AdminAppointmentsPage() {
 
     if (options.length === 0) {
       return (
-        <Button variant="ghost" size="icon" disabled className="text-zinc-300 rounded-xl">
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled
+          className="text-zinc-300 rounded-xl"
+        >
           <MoreVertical className="w-5 h-5" />
         </Button>
       );
@@ -116,12 +170,17 @@ export default function AdminAppointmentsPage() {
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="rounded-xl">
+        <DropdownMenuContent
+          align="end"
+          className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800"
+        >
           {options.map((opt) => (
             <DropdownMenuItem
               key={opt.status}
-              onClick={() => changeStatus({ appointmentId: app.id, status: opt.status })}
-              className="cursor-pointer font-semibold text-sm"
+              onClick={() =>
+                changeStatus({ appointmentId: app.id, status: opt.status })
+              }
+              className="cursor-pointer font-semibold text-sm focus:bg-celeste/10 focus:text-celeste"
             >
               {opt.label}
             </DropdownMenuItem>
@@ -143,7 +202,8 @@ export default function AdminAppointmentsPage() {
             Gestión de Citas Médicas
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-2 font-medium">
-            Supervisa, programa y gestiona todas las consultas médicas del sistema.
+            Supervisa, programa y gestiona todas las consultas médicas del
+            sistema.
           </p>
         </div>
         <CreateAppointmentDialog onSuccess={() => setPage(0)} />
@@ -152,19 +212,52 @@ export default function AdminAppointmentsPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: "Citas (página actual)", value: totalElements.toString(), icon: CalendarDays, color: "text-celeste", bg: "bg-blue-50" },
-          { title: "Pendientes", value: totalPending.toString(), icon: Clock, color: "text-amber-500", bg: "bg-amber-50" },
-          { title: "Confirmadas", value: totalConfirmed.toString(), icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-50" },
-          { title: "Canceladas", value: totalCancelled.toString(), icon: XCircle, color: "text-red-500", bg: "bg-red-50" },
+          {
+            title: "Citas (página actual)",
+            value: totalElements.toString(),
+            icon: CalendarDays,
+            color: "text-celeste",
+            bg: "bg-blue-50",
+          },
+          {
+            title: "Pendientes",
+            value: totalPending.toString(),
+            icon: Clock,
+            color: "text-amber-500",
+            bg: "bg-amber-50",
+          },
+          {
+            title: "Confirmadas",
+            value: totalConfirmed.toString(),
+            icon: CheckCircle2,
+            color: "text-emerald-500",
+            bg: "bg-emerald-50",
+          },
+          {
+            title: "Canceladas",
+            value: totalCancelled.toString(),
+            icon: XCircle,
+            color: "text-red-500",
+            bg: "bg-red-50",
+          },
         ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm rounded-3xl overflow-hidden">
+          <Card
+            key={i}
+            className="border-none shadow-sm rounded-3xl overflow-hidden"
+          >
             <CardContent className="p-6 flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl ${stat.bg} dark:bg-zinc-800 flex items-center justify-center ${stat.color}`}>
+              <div
+                className={`w-12 h-12 rounded-2xl ${stat.bg} dark:bg-zinc-800 flex items-center justify-center ${stat.color}`}
+              >
                 <stat.icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{stat.title}</p>
-                <h3 className="text-2xl font-bold text-petroleo dark:text-white leading-tight">{stat.value}</h3>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  {stat.title}
+                </p>
+                <h3 className="text-2xl font-bold text-petroleo dark:text-white leading-tight">
+                  {stat.value}
+                </h3>
               </div>
             </CardContent>
           </Card>
@@ -206,7 +299,10 @@ export default function AdminAppointmentsPage() {
                 startContent={<Search className="w-4 h-4 text-zinc-400" />}
                 className="h-auto py-2 bg-zinc-100 dark:bg-zinc-800 border-none rounded-xl text-sm w-64 lg:w-80 font-medium"
               />
-              <Button variant="outline" className="rounded-xl flex items-center gap-2 font-bold text-xs border-zinc-200">
+              <Button
+                variant="outline"
+                className="rounded-xl flex items-center gap-2 font-bold text-xs border-zinc-200"
+              >
                 <Filter className="w-4 h-4" />
                 Filtros Avanzados
               </Button>
@@ -214,34 +310,58 @@ export default function AdminAppointmentsPage() {
           </div>
 
           <CardContent className="p-0">
-            <TabsContent value={tab} className="mt-0 border-none p-0 outline-none">
+            <TabsContent
+              value={tab}
+              className="mt-0 border-none p-0 outline-none"
+            >
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">
                   <Spinner className="w-10 h-10 text-celeste" />
-                  <p className="text-zinc-500 font-bold text-sm">Cargando citas...</p>
+                  <p className="text-zinc-500 font-bold text-sm">
+                    Cargando citas...
+                  </p>
                 </div>
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <CalendarDays className="w-16 h-16 text-zinc-300 dark:text-zinc-700 mb-4" />
-                  <h3 className="font-bold text-lg text-petroleo dark:text-white">No se encontraron citas</h3>
-                  <p className="text-zinc-400 text-sm mt-1">Ajusta los filtros o crea una nueva cita.</p>
+                  <h3 className="font-bold text-lg text-petroleo dark:text-white">
+                    No se encontraron citas
+                  </h3>
+                  <p className="text-zinc-400 text-sm mt-1">
+                    Ajusta los filtros o crea una nueva cita.
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-zinc-100 dark:border-zinc-800 uppercase tracking-wider">
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">Paciente</th>
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">Médico Especialista</th>
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">Fecha y Hora</th>
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">Motivo</th>
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">Estado</th>
-                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400 text-right">Acciones</th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">
+                          Paciente
+                        </th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">
+                          Médico Especialista
+                        </th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">
+                          Fecha y Hora
+                        </th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">
+                          Motivo
+                        </th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400">
+                          Estado
+                        </th>
+                        <th className="px-8 py-5 text-[11px] font-bold text-zinc-400 text-right">
+                          Acciones
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800/50">
                       {filtered.map((app) => (
-                        <tr key={app.id} className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors">
+                        <tr
+                          key={app.id}
+                          className="hover:bg-zinc-50/50 dark:hover:bg-zinc-800/30 transition-colors"
+                        >
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-blanco-azulado flex items-center justify-center text-celeste border border-zinc-100 dark:border-zinc-700">
@@ -264,9 +384,13 @@ export default function AdminAppointmentsPage() {
                           </td>
                           <td className="px-8 py-6">
                             <div className="space-y-1">
-                              <p className="text-sm font-bold text-petroleo dark:text-white">{app.appointmentDate}</p>
+                              <p className="text-sm font-bold text-petroleo dark:text-white">
+                                {app.appointmentDate}
+                              </p>
                               <p className="text-xs text-zinc-500 font-medium">
-                                {app.appointmentTime ? app.appointmentTime.substring(0, 5) : "--:--"}
+                                {app.appointmentTime
+                                  ? app.appointmentTime.substring(0, 5)
+                                  : "--:--"}
                               </p>
                             </div>
                           </td>
@@ -278,13 +402,16 @@ export default function AdminAppointmentsPage() {
                           <td className="px-8 py-6">
                             <span
                               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-widest border ${
-                                STATUS_STYLE[app.status] || "bg-zinc-50 text-zinc-600 border-zinc-100"
+                                STATUS_STYLE[app.status] ||
+                                "bg-zinc-50 text-zinc-600 border-zinc-100"
                               }`}
                             >
                               {STATUS_LABEL[app.status] || app.status}
                             </span>
                           </td>
-                          <td className="px-8 py-6 text-right">{renderActions(app)}</td>
+                          <td className="px-8 py-6 text-right">
+                            {renderActions(app)}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -297,8 +424,11 @@ export default function AdminAppointmentsPage() {
           {totalPages > 1 && (
             <div className="p-6 border-t border-zinc-100 dark:border-zinc-800 flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-sm font-bold text-zinc-400">
-                Página <span className="text-petroleo dark:text-white">{page + 1}</span> de {totalPages} —{" "}
-                {totalElements} citas registradas
+                Página{" "}
+                <span className="text-petroleo dark:text-white">
+                  {page + 1}
+                </span>{" "}
+                de {totalPages} — {totalElements} citas registradas
               </p>
               <div className="flex items-center gap-1">
                 <Button
@@ -324,7 +454,9 @@ export default function AdminAppointmentsPage() {
                   variant="ghost"
                   size="icon"
                   disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                  onClick={() =>
+                    setPage((p) => Math.min(totalPages - 1, p + 1))
+                  }
                   className="text-zinc-400 hover:text-petroleo disabled:opacity-50 rounded-xl"
                 >
                   <ArrowRight className="w-4 h-4" />
@@ -334,6 +466,14 @@ export default function AdminAppointmentsPage() {
           )}
         </Card>
       </Tabs>
+
+      {selectedAppointmentId && (
+        <ViewConsultationDialog
+          appointmentId={selectedAppointmentId}
+          isOpen={isViewOpen}
+          onOpenChange={setIsViewOpen}
+        />
+      )}
     </div>
   );
 }

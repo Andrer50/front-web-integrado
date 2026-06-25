@@ -118,6 +118,7 @@ export default function ConsultationWorkspace() {
   const [prescriptions, setPrescriptions] = useState([
     { name: "", dose: "", frequency: "", duration: "" },
   ]);
+  const [prescriptionNotes, setPrescriptionNotes] = useState("");
   const [allergies, setAllergies] = useState([{ type: "", severity: "LEVE" }]);
 
   // Guard state to track if consultation data has been loaded into form state
@@ -153,6 +154,7 @@ export default function ConsultationWorkspace() {
           }
 
           if (c.prescription) {
+            setPrescriptionNotes(c.prescription.notes || "");
             setPrescriptions(
               c.prescription.items?.map((item) => ({
                 name: item.medicationName || "",
@@ -237,7 +239,7 @@ export default function ConsultationWorkspace() {
     const parsedPrescription =
       validPrescriptions.length > 0
         ? {
-            notes: "Receta médica de la consulta",
+            notes: prescriptionNotes || "Receta médica de la consulta",
             items: validPrescriptions.map((p) => ({
               medicationName: p.name,
               dosage: p.dose,
@@ -534,9 +536,9 @@ export default function ConsultationWorkspace() {
                       key={idx}
                       className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group transition-all"
                     >
-                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-4 gap-4 w-full">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-5 gap-4 w-full">
                         <Input
-                          placeholder="Medicamento (Ej. Paracetamol 500mg)"
+                          placeholder="Medicamento (Ej. Paracetamol)"
                           className="sm:col-span-2 bg-white"
                           value={presc.name}
                           onChange={(
@@ -544,6 +546,19 @@ export default function ConsultationWorkspace() {
                           ) => {
                             const newP = [...prescriptions];
                             newP[idx].name = e.target.value;
+                            setPrescriptions(newP);
+                          }}
+                          disabled={isCompleted}
+                        />
+                        <Input
+                          placeholder="Dosis (Ej. 500mg)"
+                          className="bg-white"
+                          value={presc.dose}
+                          onChange={(
+                            e: React.ChangeEvent<HTMLInputElement>,
+                          ) => {
+                            const newP = [...prescriptions];
+                            newP[idx].dose = e.target.value;
                             setPrescriptions(newP);
                           }}
                           disabled={isCompleted}
@@ -587,6 +602,22 @@ export default function ConsultationWorkspace() {
                       )}
                     </div>
                   ))}
+
+                  {/* Notas de la Receta */}
+                  <div className="pt-6 border-t border-zinc-100 dark:border-zinc-900/60 mt-6 space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest block">
+                      Indicaciones / Notas de la Receta
+                    </label>
+                    <textarea
+                      placeholder="Instrucciones adicionales para la receta médica (Ej. Tomar con abundante agua, evitar alcohol...)"
+                      className="min-h-[100px] resize-none rounded-xl p-4 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 focus-visible:ring-celeste focus:outline-none focus:ring-2 w-full text-sm font-medium"
+                      value={prescriptionNotes}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                        setPrescriptionNotes(e.target.value)
+                      }
+                      disabled={isCompleted}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </div>

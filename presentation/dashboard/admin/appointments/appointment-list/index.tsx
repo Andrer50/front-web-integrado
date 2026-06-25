@@ -3,12 +3,9 @@
 import { useState } from "react";
 import {
   Calendar,
-  ChevronRight,
   MapPin,
   Clock,
-  MoreVertical,
   Search,
-  Filter,
   FileText,
   User as UserIcon,
   Loader2,
@@ -21,6 +18,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
 import { useAppointments } from "@/modules/domain/appointment/hooks/useAppointments";
 import { useChangeAppointmentStatus } from "@/modules/domain/appointment/hooks/useChangeAppointmentStatus"; // ← nuevo
+import { ViewConsultationDialog } from "@/presentation/dashboard/admin/appointments/view-consultation-dialog";
 import { type AppointmentResponse } from "@/core/appointment/interfaces";
 import {
   Select,
@@ -43,28 +41,40 @@ interface AppointmentListProps {
 }
 
 export function AppointmentList({ patientId }: AppointmentListProps) {
-  const [activeTab, setActiveTab] = useState<"upcoming" | "history">("upcoming");
+  const [activeTab, setActiveTab] = useState<"upcoming" | "history">(
+    "upcoming",
+  );
   const [upcomingPage, setUpcomingPage] = useState(0);
   const [historyPage, setHistoryPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [selectedAppointmentId, setSelectedAppointmentId] = useState<
+    string | null
+  >(null);
+  const [isViewOpen, setIsViewOpen] = useState(false);
 
   // ← nuevo: hook de cancelación
-  const { mutate: changeStatus, isPending: isCancelling, variables } = useChangeAppointmentStatus();
+  const {
+    mutate: changeStatus,
+    isPending: isCancelling,
+    variables,
+  } = useChangeAppointmentStatus();
 
-  const { data: upcomingAppointmentsData, isLoading: isLoadingUpcoming } = useAppointments({
-    patientId,
-    status: statusFilter !== "ALL" ? statusFilter : undefined,
-    page: upcomingPage,
-    size: 5,
-  });
+  const { data: upcomingAppointmentsData, isLoading: isLoadingUpcoming } =
+    useAppointments({
+      patientId,
+      status: statusFilter !== "ALL" ? statusFilter : undefined,
+      page: upcomingPage,
+      size: 5,
+    });
 
-  const { data: historyAppointmentsData, isLoading: isLoadingHistory } = useAppointments({
-    patientId,
-    status: "COMPLETED",
-    page: historyPage,
-    size: 5,
-  });
+  const { data: historyAppointmentsData, isLoading: isLoadingHistory } =
+    useAppointments({
+      patientId,
+      status: "COMPLETED",
+      page: historyPage,
+      size: 5,
+    });
 
   const upcomingList = upcomingAppointmentsData?.data?.content || [];
   const historyList = historyAppointmentsData?.data?.content || [];
@@ -74,9 +84,13 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
   const filterByQuery = (list: AppointmentResponse[]) => {
     if (!searchQuery) return list;
     return list.filter((app) => {
-      const docName = `${app.doctorFirstName} ${app.doctorLastName}`.toLowerCase();
+      const docName =
+        `${app.doctorFirstName} ${app.doctorLastName}`.toLowerCase();
       const spec = (app.doctorSpecialty || "").toLowerCase();
-      return docName.includes(searchQuery.toLowerCase()) || spec.includes(searchQuery.toLowerCase());
+      return (
+        docName.includes(searchQuery.toLowerCase()) ||
+        spec.includes(searchQuery.toLowerCase())
+      );
     });
   };
 
@@ -108,7 +122,10 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
       </TabsList>
 
       {/* Próximas citas */}
-      <TabsContent value="upcoming" className="space-y-6 mt-0 border-none p-0 outline-none">
+      <TabsContent
+        value="upcoming"
+        className="space-y-6 mt-0 border-none p-0 outline-none"
+      >
         <div className="flex flex-col md:flex-row gap-4">
           <Input
             type="text"
@@ -120,15 +137,38 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
             }
             className="h-auto py-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-2xl focus-visible:ring-celeste font-medium"
           />
-          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(val) => setStatusFilter(val)}
+          >
             <SelectTrigger className="h-12 px-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl text-sm font-bold text-zinc-600 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-celeste focus:border-transparent transition-all cursor-pointer min-w-[180px]">
               <SelectValue placeholder="Todos los estados" />
             </SelectTrigger>
             <SelectContent className="rounded-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 font-semibold text-zinc-700 dark:text-zinc-300">
-              <SelectItem value="ALL" className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer">Todos los estados</SelectItem>
-              <SelectItem value="PENDING" className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer">Pendientes</SelectItem>
-              <SelectItem value="CONFIRMED" className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer">Confirmadas</SelectItem>
-              <SelectItem value="CANCELLED" className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer">Canceladas</SelectItem>
+              <SelectItem
+                value="ALL"
+                className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer"
+              >
+                Todos los estados
+              </SelectItem>
+              <SelectItem
+                value="PENDING"
+                className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer"
+              >
+                Pendientes
+              </SelectItem>
+              <SelectItem
+                value="CONFIRMED"
+                className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer"
+              >
+                Confirmadas
+              </SelectItem>
+              <SelectItem
+                value="CANCELLED"
+                className="rounded-xl focus:bg-celeste/10 focus:text-celeste cursor-pointer"
+              >
+                Canceladas
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -136,20 +176,26 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
         {isLoadingUpcoming ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Spinner className="w-10 h-10 text-celeste" />
-            <p className="text-zinc-500 font-bold text-sm">Cargando tus citas programadas...</p>
+            <p className="text-zinc-500 font-bold text-sm">
+              Cargando tus citas programadas...
+            </p>
           </div>
         ) : filteredUpcoming.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-zinc-950 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800">
             <Calendar className="w-16 h-16 text-zinc-300 dark:text-zinc-700 mb-4" />
-            <h3 className="font-bold text-lg text-petroleo dark:text-white">No tienes citas programadas</h3>
+            <h3 className="font-bold text-lg text-petroleo dark:text-white">
+              No tienes citas programadas
+            </h3>
             <p className="text-zinc-400 text-sm mt-1 max-w-sm text-center">
-              Agenda una consulta médica con uno de nuestros especialistas calificados presionando el botón &quot;Nueva Cita&quot;.
+              Agenda una consulta médica con uno de nuestros especialistas
+              calificados presionando el botón &quot;Nueva Cita&quot;.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {filteredUpcoming.map((app) => {
-              const isCancellingThis = isCancelling && variables?.appointmentId === app.id;
+              const isCancellingThis =
+                isCancelling && variables?.appointmentId === app.id;
 
               return (
                 <Card
@@ -166,7 +212,9 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                         <h3 className="font-bold text-petroleo dark:text-white group-hover:text-celeste transition-colors truncate">
                           Dr. {app.doctorFirstName} {app.doctorLastName}
                         </h3>
-                        <p className="text-xs font-bold text-celeste truncate mt-0.5">{app.doctorSpecialty}</p>
+                        <p className="text-xs font-bold text-celeste truncate mt-0.5">
+                          {app.doctorSpecialty}
+                        </p>
                         <p className="text-[10px] text-zinc-400 mt-1.5 font-bold uppercase tracking-wider">
                           CMP: {app.doctorMedicalLicenseNumber}
                         </p>
@@ -180,8 +228,12 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                           <Calendar className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">{app.appointmentDate}</p>
-                          <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">Fecha de consulta</p>
+                          <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
+                            {app.appointmentDate}
+                          </p>
+                          <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
+                            Fecha de consulta
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -190,9 +242,13 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                         </div>
                         <div className="min-w-0">
                           <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
-                            {app.appointmentTime ? app.appointmentTime.substring(0, 5) : "--:--"}
+                            {app.appointmentTime
+                              ? app.appointmentTime.substring(0, 5)
+                              : "--:--"}
                           </p>
-                          <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">Hora programada</p>
+                          <p className="text-[11px] text-zinc-500 font-medium truncate mt-0.5">
+                            Hora programada
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -200,7 +256,9 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                           <MapPin className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">Presencial</p>
+                          <p className="text-[15px] font-black text-petroleo dark:text-zinc-100 whitespace-nowrap">
+                            Presencial
+                          </p>
                           <p className="text-[11px] text-zinc-500 font-medium truncate max-w-[140px] mt-0.5">
                             {app.reason || "Consulta General"}
                           </p>
@@ -219,7 +277,11 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                               : "bg-red-50 text-red-600 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30"
                         }`}
                       >
-                        {app.status === "CONFIRMED" ? "CONFIRMADA" : app.status === "PENDING" ? "PENDIENTE" : "CANCELADA"}
+                        {app.status === "CONFIRMED"
+                          ? "CONFIRMADA"
+                          : app.status === "PENDING"
+                            ? "PENDIENTE"
+                            : "CANCELADA"}
                       </span>
 
                       {/* ← botón cancelar: solo si está PENDING */}
@@ -228,13 +290,21 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                           variant="outline"
                           size="sm"
                           disabled={isCancellingThis}
-                          onClick={() => changeStatus({ appointmentId: app.id, status: "CANCELLED" })}
+                          onClick={() =>
+                            changeStatus({
+                              appointmentId: app.id,
+                              status: "CANCELLED",
+                            })
+                          }
                           className="rounded-xl font-bold text-red-500 border-red-200 hover:bg-red-50 hover:border-red-300 dark:border-red-900/30 dark:hover:bg-red-950/20 cursor-pointer transition-all"
                         >
-                          {isCancellingThis
-                            ? <Loader2 className="w-4 h-4 animate-spin" />
-                            : <><XCircle className="w-4 h-4 mr-1" /> Cancelar</>
-                          }
+                          {isCancellingThis ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <XCircle className="w-4 h-4 mr-1" /> Cancelar
+                            </>
+                          )}
                         </Button>
                       )}
                     </div>
@@ -248,17 +318,40 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if (upcomingPage > 0) setUpcomingPage(upcomingPage - 1); }} />
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (upcomingPage > 0)
+                            setUpcomingPage(upcomingPage - 1);
+                        }}
+                      />
                     </PaginationItem>
-                    {Array.from({ length: upcomingTotalPages }).map((_, idx) => (
-                      <PaginationItem key={idx}>
-                        <PaginationLink href="#" isActive={idx === upcomingPage} onClick={(e) => { e.preventDefault(); setUpcomingPage(idx); }}>
-                          {idx + 1}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
+                    {Array.from({ length: upcomingTotalPages }).map(
+                      (_, idx) => (
+                        <PaginationItem key={idx}>
+                          <PaginationLink
+                            href="#"
+                            isActive={idx === upcomingPage}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setUpcomingPage(idx);
+                            }}
+                          >
+                            {idx + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
                     <PaginationItem>
-                      <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if (upcomingPage < upcomingTotalPages - 1) setUpcomingPage(upcomingPage + 1); }} />
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (upcomingPage < upcomingTotalPages - 1)
+                            setUpcomingPage(upcomingPage + 1);
+                        }}
+                      />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
@@ -269,24 +362,35 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
       </TabsContent>
 
       {/* Historial */}
-      <TabsContent value="history" className="space-y-6 mt-0 border-none p-0 outline-none">
+      <TabsContent
+        value="history"
+        className="space-y-6 mt-0 border-none p-0 outline-none"
+      >
         {isLoadingHistory ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Spinner className="w-10 h-10 text-celeste" />
-            <p className="text-zinc-500 font-bold text-sm">Cargando historial de citas...</p>
+            <p className="text-zinc-500 font-bold text-sm">
+              Cargando historial de citas...
+            </p>
           </div>
         ) : filteredHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-zinc-950 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800">
             <FileText className="w-16 h-16 text-zinc-300 dark:text-zinc-700 mb-4" />
-            <h3 className="font-bold text-lg text-petroleo dark:text-white">No tienes citas pasadas</h3>
+            <h3 className="font-bold text-lg text-petroleo dark:text-white">
+              No tienes citas pasadas
+            </h3>
             <p className="text-zinc-400 text-sm mt-1 max-w-sm text-center">
-              Una vez que completes o canceles citas, aparecerán en esta sección.
+              Una vez que completes o canceles citas, aparecerán en esta
+              sección.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6">
             {filteredHistory.map((app) => (
-              <Card key={app.id} className="rounded-[3rem] border-zinc-100 dark:border-zinc-800 shadow-sm group overflow-hidden">
+              <Card
+                key={app.id}
+                className="rounded-[3rem] border-zinc-100 dark:border-zinc-800 shadow-sm group overflow-hidden"
+              >
                 <CardContent className="p-8">
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-6 border-b border-zinc-50 dark:border-zinc-800/50">
                     <div className="flex items-center gap-4">
@@ -297,9 +401,14 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                         <h3 className="font-bold text-petroleo dark:text-white">
                           Dr. {app.doctorFirstName} {app.doctorLastName}
                         </h3>
-                        <p className="text-xs font-bold text-verde-salud">{app.doctorSpecialty}</p>
+                        <p className="text-xs font-bold text-verde-salud">
+                          {app.doctorSpecialty}
+                        </p>
                         <p className="text-[10px] text-zinc-400 mt-1 font-bold tracking-wider">
-                          {app.appointmentDate} • {app.appointmentTime ? app.appointmentTime.substring(0, 5) : "--:--"}
+                          {app.appointmentDate} •{" "}
+                          {app.appointmentTime
+                            ? app.appointmentTime.substring(0, 5)
+                            : "--:--"}
                         </p>
                       </div>
                     </div>
@@ -311,7 +420,9 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                             : "bg-red-50 text-red-600 border-red-100 dark:bg-red-950/20 dark:text-red-400 dark:border-red-900/30"
                         }`}
                       >
-                        {app.status === "COMPLETED" ? "COMPLETADA" : "CANCELADA"}
+                        {app.status === "COMPLETED"
+                          ? "COMPLETADA"
+                          : "CANCELADA"}
                       </span>
                     </div>
                   </div>
@@ -322,12 +433,28 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                         <FileText className="w-4 h-4 text-zinc-400" />
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Diagnóstico / Observaciones</p>
+                        <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">
+                          Diagnóstico / Observaciones
+                        </p>
                         <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed italic font-medium">
                           {app.reason || "Consulta de rutina completada."}
                         </p>
                       </div>
                     </div>
+
+                    {app.status === "COMPLETED" && (
+                      <Button
+                        onClick={() => {
+                          setSelectedAppointmentId(app.id);
+                          setIsViewOpen(true);
+                        }}
+                        variant="outline"
+                        className="rounded-xl font-bold border-zinc-200 dark:border-zinc-800 text-celeste hover:bg-celeste/10 hover:text-celeste cursor-pointer shrink-0"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Ver Receta / Consulta
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -338,17 +465,37 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
-                      <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); if (historyPage > 0) setHistoryPage(historyPage - 1); }} />
+                      <PaginationPrevious
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (historyPage > 0) setHistoryPage(historyPage - 1);
+                        }}
+                      />
                     </PaginationItem>
                     {Array.from({ length: historyTotalPages }).map((_, idx) => (
                       <PaginationItem key={idx}>
-                        <PaginationLink href="#" isActive={idx === historyPage} onClick={(e) => { e.preventDefault(); setHistoryPage(idx); }}>
+                        <PaginationLink
+                          href="#"
+                          isActive={idx === historyPage}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setHistoryPage(idx);
+                          }}
+                        >
                           {idx + 1}
                         </PaginationLink>
                       </PaginationItem>
                     ))}
                     <PaginationItem>
-                      <PaginationNext href="#" onClick={(e) => { e.preventDefault(); if (historyPage < historyTotalPages - 1) setHistoryPage(historyPage + 1); }} />
+                      <PaginationNext
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (historyPage < historyTotalPages - 1)
+                            setHistoryPage(historyPage + 1);
+                        }}
+                      />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
@@ -357,6 +504,14 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
           </div>
         )}
       </TabsContent>
+
+      {selectedAppointmentId && (
+        <ViewConsultationDialog
+          appointmentId={selectedAppointmentId}
+          isOpen={isViewOpen}
+          onOpenChange={setIsViewOpen}
+        />
+      )}
     </Tabs>
   );
 }

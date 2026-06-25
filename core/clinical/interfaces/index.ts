@@ -75,6 +75,11 @@ export interface PrescriptionResponse {
   notes: string;
   issueDate: string;
   items: PrescriptionItemResponse[];
+  doctorFirstName?: string;
+  doctorLastName?: string;
+  doctorSpecialty?: string;
+  appointmentDate?: string;
+  appointmentTime?: string;
 }
 
 export interface AllergyConsultationRequest {

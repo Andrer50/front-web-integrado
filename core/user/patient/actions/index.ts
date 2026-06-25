@@ -110,6 +110,11 @@ export interface MedicalHistoryResponse {
     id: string;
     notes?: string;
     issueDate: string;
+    doctorFirstName?: string;
+    doctorLastName?: string;
+    doctorSpecialty?: string;
+    appointmentDate?: string;
+    appointmentTime?: string;
     items: {
       id: string;
       medicationName: string;
