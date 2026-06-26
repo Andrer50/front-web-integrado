@@ -98,6 +98,17 @@ export interface LabOrderResponse {
   resultRecordedAt?: string;
 }
 
+export interface LabResultRequest {
+  details: string;
+}
+
+export interface LabResultResponse {
+  id: string;
+  labOrderId: string;
+  details: string;
+  recordedAt: string;
+}
+
 export interface AllergyConsultationRequest {
   type: string;
   severity: string;
@@ -107,6 +118,7 @@ export interface CompleteConsultationRequest {
   notes: string;
   vitals?: ConsultationVitalsRequest;
   diagnosis?: ConsultationDiagnosisRequest;
+  diagnoses?: ConsultationDiagnosisRequest[];
   prescription?: PrescriptionRequest;
   labOrders?: LabOrderRequest[];
   allergies?: AllergyConsultationRequest[];

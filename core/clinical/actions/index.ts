@@ -4,6 +4,8 @@ import {
   ConsultationRequest,
   ConsultationResponse,
   CompleteConsultationRequest,
+  LabResultRequest,
+  LabResultResponse,
 } from "../interfaces";
 
 /**
@@ -72,6 +74,25 @@ export const completeConsultationAction = async (
     return data;
   } catch (error) {
     console.error("Error in completeConsultationAction:", error);
+    throw error;
+  }
+};
+
+/**
+ * Registrar el resultado de una solicitud de laboratorio o imagen
+ */
+export const recordLabResultAction = async (
+  labOrderId: string,
+  request: LabResultRequest,
+) => {
+  try {
+    const { data } = await apiClient.post<ApiResponse<LabResultResponse>>(
+      `/api/v1/lab-orders/${labOrderId}/result`,
+      request,
+    );
+    return data;
+  } catch (error) {
+    console.error("Error in recordLabResultAction:", error);
     throw error;
   }
 };
