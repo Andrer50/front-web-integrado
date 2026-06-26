@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   Plus,
   Trash2,
+  FlaskConical,
 } from "lucide-react";
 
 const parseDiagnosis = (text: string) => {
@@ -119,6 +120,9 @@ export default function ConsultationWorkspace() {
     { name: "", dose: "", frequency: "", duration: "" },
   ]);
   const [prescriptionNotes, setPrescriptionNotes] = useState("");
+  const [labOrders, setLabOrders] = useState([
+    { type: "LABORATORY", name: "" },
+  ]);
   const [allergies, setAllergies] = useState([{ type: "", severity: "LEVE" }]);
 
   // Guard state to track if consultation data has been loaded into form state
@@ -164,6 +168,17 @@ export default function ConsultationWorkspace() {
               })) || [],
             );
           }
+
+          if (c.labOrders && c.labOrders.length > 0) {
+            setLabOrders(
+              c.labOrders.map((order) => ({
+                type: order.type || "LABORATORY",
+                name: order.name || "",
+              })),
+            );
+          } else if (c.status === "COMPLETED") {
+            setLabOrders([]);
+          }
           setIsLoaded(true);
         }, 0);
       } else if (
@@ -201,6 +216,11 @@ export default function ConsultationWorkspace() {
     ]);
   const removePrescription = (idx: number) =>
     setPrescriptions(prescriptions.filter((_, i) => i !== idx));
+
+  const addLabOrder = () =>
+    setLabOrders([...labOrders, { type: "LABORATORY", name: "" }]);
+  const removeLabOrder = (idx: number) =>
+    setLabOrders(labOrders.filter((_, i) => i !== idx));
 
   const addAllergy = () =>
     setAllergies([...allergies, { type: "", severity: "LEVE" }]);
@@ -250,6 +270,12 @@ export default function ConsultationWorkspace() {
           }
         : undefined;
 
+    const validLabOrders = labOrders.filter((order) => order.name.trim() !== "");
+    const parsedLabOrders = validLabOrders.map((order) => ({
+      type: order.type,
+      name: order.name.trim(),
+    }));
+
     const validAllergies = allergies.filter((a) => a.type.trim() !== "");
     const parsedAllergies = validAllergies.map((a) => ({
       type: a.type,
@@ -263,6 +289,7 @@ export default function ConsultationWorkspace() {
         vitals: parsedVitals,
         diagnosis: parsedDiagnosis || undefined,
         prescription: parsedPrescription,
+        labOrders: parsedLabOrders.length > 0 ? parsedLabOrders : undefined,
         allergies: parsedAllergies.length > 0 ? parsedAllergies : undefined,
       },
       {
@@ -380,11 +407,12 @@ export default function ConsultationWorkspace() {
 
       {/* Workspace Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full !h-auto p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-[1.5rem] grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-8">
+        <TabsList className="w-full !h-auto p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-[1.5rem] grid grid-cols-2 md:grid-cols-5 gap-1.5 mb-8">
           {[
             { id: "resumen", label: "Historia Clínica", icon: Stethoscope },
             { id: "vitals", label: "Signos Vitales", icon: Activity },
             { id: "receta", label: "Diagnóstico y Receta", icon: Pill },
+            { id: "examenes", label: "Exámenes", icon: FlaskConical },
             { id: "alergias", label: "Alergias", icon: AlertTriangle },
           ].map((tab) => (
             <TabsTrigger
@@ -622,6 +650,80 @@ export default function ConsultationWorkspace() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        {/* CONTENIDO: EXAMENES */}
+        <TabsContent value="examenes" className="focus-visible:outline-none">
+          <Card className="rounded-[2.5rem] border-zinc-100 shadow-sm overflow-hidden bg-white dark:bg-zinc-950">
+            <CardHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between border-b border-zinc-50 pb-6 mb-6">
+              <CardTitle className="text-xl font-bold text-petroleo flex items-center gap-2">
+                <FlaskConical className="w-6 h-6 text-celeste" />
+                Exámenes de Laboratorio e Imágenes
+              </CardTitle>
+              {!isCompleted && (
+                <Button
+                  onClick={addLabOrder}
+                  variant="outline"
+                  className="rounded-xl font-bold border-zinc-200"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Agregar Examen
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="px-8 pb-8 space-y-4">
+              {labOrders.length === 0 && (
+                <div className="text-center py-10 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                  <p className="text-zinc-500 font-bold">
+                    No se solicitaron exámenes en esta consulta.
+                  </p>
+                </div>
+              )}
+
+              {labOrders.map((order, idx) => (
+                <div
+                  key={idx}
+                  className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group transition-all"
+                >
+                  <select
+                    className="h-11 px-4 rounded-xl border border-zinc-200 bg-white font-bold text-sm text-petroleo focus:outline-none focus:ring-2 focus:ring-celeste min-w-[170px]"
+                    value={order.type}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                      const next = [...labOrders];
+                      next[idx].type = e.target.value;
+                      setLabOrders(next);
+                    }}
+                    disabled={isCompleted}
+                  >
+                    <option value="LABORATORY">Laboratorio</option>
+                    <option value="IMAGE">Imagen</option>
+                  </select>
+
+                  <Input
+                    placeholder="Nombre del examen (Ej. Hemograma completo, Radiografía de tórax)"
+                    className="bg-white flex-1"
+                    value={order.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                      const next = [...labOrders];
+                      next[idx].name = e.target.value;
+                      setLabOrders(next);
+                    }}
+                    disabled={isCompleted}
+                  />
+
+                  {!isCompleted && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeLabOrder(idx)}
+                      className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl opacity-50 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* CONTENIDO: ALERGIAS */}
