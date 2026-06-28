@@ -162,11 +162,15 @@ export default function PatientPrescriptionsPage() {
         <div className="space-y-8">
           {filteredPrescriptions.map((presc) => {
             const issueDateObj = new Date(presc.issueDate);
-            const formattedIssueDate = issueDateObj.toLocaleDateString("es-ES", {
+            const formattedIssueDate = `${issueDateObj.toLocaleDateString("es-ES", {
               day: "numeric",
               month: "long",
               year: "numeric",
-            });
+            })} a las ${issueDateObj.toLocaleTimeString("es-ES", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })}`;
 
             // Doctor full name and specialty
             const doctorName = presc.doctorFirstName && presc.doctorLastName 

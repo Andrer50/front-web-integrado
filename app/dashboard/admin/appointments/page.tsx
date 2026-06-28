@@ -62,6 +62,7 @@ export default function AdminAppointmentsPage() {
     status: tab === "PENDING" ? "PENDING" : undefined,
     page,
     size,
+    sort: "createdAt,desc",
   });
 
   const {

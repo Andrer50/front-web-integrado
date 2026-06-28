@@ -450,11 +450,15 @@ export default function PatientProfilePage() {
               <div className="space-y-6">
                 {prescriptions.map((presc) => {
                   const dateObj = new Date(presc.issueDate);
-                  const formattedDate = dateObj.toLocaleDateString("es-ES", {
+                  const formattedDate = `${dateObj.toLocaleDateString("es-ES", {
                     day: "numeric",
                     month: "long",
                     year: "numeric",
-                  });
+                  })} a las ${dateObj.toLocaleTimeString("es-ES", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}`;
                   return (
                     <div key={presc.id} className="bg-zinc-50 dark:bg-zinc-900/30 p-6 rounded-[2rem] border border-zinc-100 dark:border-zinc-900">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-200/50 dark:border-zinc-800 pb-4 mb-4">
