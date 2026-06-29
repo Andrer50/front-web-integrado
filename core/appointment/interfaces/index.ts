@@ -21,12 +21,14 @@ export interface AppointmentResponse {
   appointmentTime: string; // "HH:mm"
   status: string;
   reason?: string;
+  createdAt?: string;
 }
 
 export interface AppointmentFilters extends PaginationParams {
   patientId?: string;
   doctorId?: string;
   status?: string;
+  sort?: string;
 }
 
 export interface GenerateSlotsRequest {

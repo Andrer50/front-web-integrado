@@ -66,6 +66,7 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
       status: statusFilter !== "ALL" ? statusFilter : undefined,
       page: upcomingPage,
       size: 5,
+      sort: "createdAt,desc",
     });
 
   const { data: historyAppointmentsData, isLoading: isLoadingHistory } =
@@ -74,6 +75,7 @@ export function AppointmentList({ patientId }: AppointmentListProps) {
       status: "COMPLETED",
       page: historyPage,
       size: 5,
+      sort: "createdAt,desc",
     });
 
   const upcomingList = upcomingAppointmentsData?.data?.content || [];
