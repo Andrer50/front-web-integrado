@@ -47,26 +47,15 @@ interface LabOrderForm {
 const parseDiagnosis = (text: string, type: DiagnosisType) => {
   const trimmed = text.trim();
   if (!trimmed) return null;
-  const match = trimmed.match(/^([A-Z]\d{2}(?:\.\d)?)\s+(.+)$/i);
+  const match = trimmed.match(/^([A-Z0-9][A-Z0-9.-]{1,19})\s+(.+)$/i);
   if (match) {
     return {
       icd10: match[1].toUpperCase(),
-      description: match[2],
+      description: match[2].trim(),
       type,
     };
   }
-  if (/^[A-Z]\d{2}(?:\.\d)?$/i.test(trimmed)) {
-    return {
-      icd10: trimmed.toUpperCase(),
-      description: "Diagnóstico registrado",
-      type,
-    };
-  }
-  return {
-    icd10: "R69",
-    description: trimmed,
-    type,
-  };
+  return null;
 };
 
 const mapSeverity = (sev: string): string => {
@@ -334,9 +323,20 @@ export default function ConsultationWorkspace() {
         }
       : undefined;
 
-    const parsedDiagnoses = diagnoses
+    const filledDiagnoses = diagnoses.filter(
+      (diagnosis) => diagnosis.value.trim() !== "",
+    );
+    const parsedDiagnoses = filledDiagnoses
       .map((diagnosis) => parseDiagnosis(diagnosis.value, diagnosis.type))
       .filter((diagnosis) => diagnosis !== null);
+
+    if (parsedDiagnoses.length !== filledDiagnoses.length) {
+      toast.error(
+        "Cada diagnóstico debe incluir un código y una descripción. Ejemplo: DX-001 Otitis aguda.",
+      );
+      setActiveTab("receta");
+      return;
+    }
 
     const validPrescriptions = prescriptions.filter(
       (p) => p.name.trim() !== "",
@@ -650,8 +650,8 @@ export default function ConsultationWorkspace() {
                       <textarea
                         placeholder={
                           diagnosis.type === "PRIMARY"
-                            ? "Ej. J02.9 Faringitis aguda"
-                            : "Código CIE-10 y descripción"
+                            ? "Ej. DX-001 Otitis aguda"
+                            : "Código y descripción"
                         }
                         className="min-h-[105px] resize-none rounded-xl p-3 bg-white border border-zinc-200 focus:outline-none focus:ring-2 focus-visible:ring-celeste w-full text-sm"
                         value={diagnosis.value}

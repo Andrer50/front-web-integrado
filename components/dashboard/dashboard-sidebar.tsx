@@ -14,7 +14,8 @@ import {
   ClipboardList,
   Stethoscope,
   MapPin,
-  FileClock
+  FileClock,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
@@ -58,6 +59,11 @@ const adminItems: SidebarItem[] = [
     title: "Citas Médicas",
     href: "/dashboard/admin/appointments",
     icon: CalendarDays,
+  },
+  {
+    title: "Órdenes y Resultados",
+    href: "/dashboard/admin/lab-results",
+    icon: FlaskConical,
   },
   {
     title: "Auditoría",
@@ -104,6 +110,11 @@ const patientItems: SidebarItem[] = [
     title: "Mis Recetas",
     href: "/dashboard/patient/prescriptions",
     icon: FileText,
+  },
+  {
+    title: "Mis Exámenes",
+    href: "/dashboard/patient/lab-results",
+    icon: FlaskConical,
   },
   {
     title: "Mi Salud",

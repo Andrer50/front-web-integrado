@@ -4,6 +4,7 @@ import {
   ConsultationRequest,
   ConsultationResponse,
   CompleteConsultationRequest,
+  LabOrderResponse,
   LabResultRequest,
   LabResultResponse,
 } from "../interfaces";
@@ -93,6 +94,22 @@ export const recordLabResultAction = async (
     return data;
   } catch (error) {
     console.error("Error in recordLabResultAction:", error);
+    throw error;
+  }
+};
+
+/**
+ * Obtener las órdenes visibles para el usuario autenticado.
+ * El backend aplica el alcance según el rol del token.
+ */
+export const getLabOrdersAction = async () => {
+  try {
+    const { data } = await apiClient.get<ApiResponse<LabOrderResponse[]>>(
+      "/api/v1/lab-orders",
+    );
+    return data;
+  } catch (error) {
+    console.error("Error in getLabOrdersAction:", error);
     throw error;
   }
 };
