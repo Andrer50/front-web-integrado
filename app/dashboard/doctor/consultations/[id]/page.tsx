@@ -8,6 +8,7 @@ import {
   useCreateConsultation,
   useCompleteConsultation,
 } from "@/modules/domain/clinical/hooks/useConsultation";
+import { useRecordLabResult } from "@/modules/domain/clinical/hooks/useRecordLabResult";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,9 +25,26 @@ import {
   CheckCircle2,
   Plus,
   Trash2,
+  FlaskConical,
 } from "lucide-react";
 
-const parseDiagnosis = (text: string) => {
+type DiagnosisType = "PRIMARY" | "SECONDARY";
+
+interface DiagnosisForm {
+  value: string;
+  type: DiagnosisType;
+}
+
+interface LabOrderForm {
+  id?: string;
+  type: string;
+  name: string;
+  status?: string;
+  resultDetails?: string;
+  resultRecordedAt?: string;
+}
+
+const parseDiagnosis = (text: string, type: DiagnosisType) => {
   const trimmed = text.trim();
   if (!trimmed) return null;
   const match = trimmed.match(/^([A-Z]\d{2}(?:\.\d)?)\s+(.+)$/i);
@@ -34,20 +52,20 @@ const parseDiagnosis = (text: string) => {
     return {
       icd10: match[1].toUpperCase(),
       description: match[2],
-      type: "PRIMARY",
+      type,
     };
   }
   if (/^[A-Z]\d{2}(?:\.\d)?$/i.test(trimmed)) {
     return {
       icd10: trimmed.toUpperCase(),
       description: "Diagnóstico registrado",
-      type: "PRIMARY",
+      type,
     };
   }
   return {
     icd10: "R69",
     description: trimmed,
-    type: "PRIMARY",
+    type,
   };
 };
 
@@ -114,11 +132,19 @@ export default function ConsultationWorkspace() {
     temperature: "",
     hr: "",
   });
-  const [diagnosis, setDiagnosis] = useState("");
+  const [diagnoses, setDiagnoses] = useState<DiagnosisForm[]>([
+    { value: "", type: "PRIMARY" },
+  ]);
   const [prescriptions, setPrescriptions] = useState([
     { name: "", dose: "", frequency: "", duration: "" },
   ]);
   const [prescriptionNotes, setPrescriptionNotes] = useState("");
+  const [labOrders, setLabOrders] = useState<LabOrderForm[]>([
+    { type: "LABORATORY", name: "" },
+  ]);
+  const [labResultDrafts, setLabResultDrafts] = useState<
+    Record<string, string>
+  >({});
   const [allergies, setAllergies] = useState([{ type: "", severity: "LEVE" }]);
 
   // Guard state to track if consultation data has been loaded into form state
@@ -149,8 +175,26 @@ export default function ConsultationWorkspace() {
           }
 
           if (c.diagnoses && c.diagnoses.length > 0) {
-            const d = c.diagnoses[0];
-            setDiagnosis(`${d.icd10} ${d.description}`);
+            const loadedDiagnoses: DiagnosisForm[] = [...c.diagnoses]
+              .sort((a, b) =>
+                a.type === "PRIMARY" || a.type === "PRINCIPAL"
+                  ? -1
+                  : b.type === "PRIMARY" || b.type === "PRINCIPAL"
+                    ? 1
+                    : 0,
+              )
+              .map((diagnosis) => ({
+                value: `${diagnosis.icd10} ${diagnosis.description}`,
+                type:
+                  diagnosis.type === "PRIMARY" ||
+                  diagnosis.type === "PRINCIPAL"
+                    ? "PRIMARY"
+                    : "SECONDARY",
+              }));
+            if (!loadedDiagnoses.some(({ type }) => type === "PRIMARY")) {
+              loadedDiagnoses.unshift({ value: "", type: "PRIMARY" });
+            }
+            setDiagnoses(loadedDiagnoses);
           }
 
           if (c.prescription) {
@@ -163,6 +207,21 @@ export default function ConsultationWorkspace() {
                 duration: item.duration || "",
               })) || [],
             );
+          }
+
+          if (c.labOrders && c.labOrders.length > 0) {
+            setLabOrders(
+              c.labOrders.map((order) => ({
+                id: order.id,
+                type: order.type || "LABORATORY",
+                name: order.name || "",
+                status: order.status,
+                resultDetails: order.resultDetails,
+                resultRecordedAt: order.resultRecordedAt,
+              })),
+            );
+          } else if (c.status === "COMPLETED") {
+            setLabOrders([]);
           }
           setIsLoaded(true);
         }, 0);
@@ -202,12 +261,56 @@ export default function ConsultationWorkspace() {
   const removePrescription = (idx: number) =>
     setPrescriptions(prescriptions.filter((_, i) => i !== idx));
 
+  const addSecondaryDiagnosis = () =>
+    setDiagnoses([...diagnoses, { value: "", type: "SECONDARY" }]);
+  const removeDiagnosis = (idx: number) =>
+    setDiagnoses(diagnoses.filter((_, i) => i !== idx));
+
+  const addLabOrder = () =>
+    setLabOrders([...labOrders, { type: "LABORATORY", name: "" }]);
+  const removeLabOrder = (idx: number) =>
+    setLabOrders(labOrders.filter((_, i) => i !== idx));
+
   const addAllergy = () =>
     setAllergies([...allergies, { type: "", severity: "LEVE" }]);
   const removeAllergy = (idx: number) =>
     setAllergies(allergies.filter((_, i) => i !== idx));
 
   const completeMutation = useCompleteConsultation(consultationId || "");
+  const recordLabResultMutation = useRecordLabResult(appointmentId, {
+    onSuccess: (response, labOrderId) => {
+      setLabOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === labOrderId
+            ? {
+                ...order,
+                status: "COMPLETED",
+                resultDetails: response.data.details,
+                resultRecordedAt: response.data.recordedAt,
+              }
+            : order,
+        ),
+      );
+      setLabResultDrafts((currentDrafts) => {
+        const nextDrafts = { ...currentDrafts };
+        delete nextDrafts[labOrderId];
+        return nextDrafts;
+      });
+    },
+  });
+
+  const handleRecordLabResult = (labOrderId: string) => {
+    const details = labResultDrafts[labOrderId]?.trim();
+    if (!details) {
+      toast.error("Escribe el resultado del examen antes de registrarlo.");
+      return;
+    }
+
+    recordLabResultMutation.mutate({
+      labOrderId,
+      request: { details },
+    });
+  };
 
   const handleFinishConsultation = () => {
     if (!consultationId) {
@@ -231,7 +334,9 @@ export default function ConsultationWorkspace() {
         }
       : undefined;
 
-    const parsedDiagnosis = parseDiagnosis(diagnosis);
+    const parsedDiagnoses = diagnoses
+      .map((diagnosis) => parseDiagnosis(diagnosis.value, diagnosis.type))
+      .filter((diagnosis) => diagnosis !== null);
 
     const validPrescriptions = prescriptions.filter(
       (p) => p.name.trim() !== "",
@@ -250,6 +355,12 @@ export default function ConsultationWorkspace() {
           }
         : undefined;
 
+    const validLabOrders = labOrders.filter((order) => order.name.trim() !== "");
+    const parsedLabOrders = validLabOrders.map((order) => ({
+      type: order.type,
+      name: order.name.trim(),
+    }));
+
     const validAllergies = allergies.filter((a) => a.type.trim() !== "");
     const parsedAllergies = validAllergies.map((a) => ({
       type: a.type,
@@ -261,8 +372,9 @@ export default function ConsultationWorkspace() {
       {
         notes: clinicalNotes,
         vitals: parsedVitals,
-        diagnosis: parsedDiagnosis || undefined,
+        diagnoses: parsedDiagnoses.length > 0 ? parsedDiagnoses : undefined,
         prescription: parsedPrescription,
+        labOrders: parsedLabOrders.length > 0 ? parsedLabOrders : undefined,
         allergies: parsedAllergies.length > 0 ? parsedAllergies : undefined,
       },
       {
@@ -380,11 +492,12 @@ export default function ConsultationWorkspace() {
 
       {/* Workspace Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full !h-auto p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-[1.5rem] grid grid-cols-2 md:grid-cols-4 gap-1.5 mb-8">
+        <TabsList className="w-full !h-auto p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-[1.5rem] grid grid-cols-2 md:grid-cols-5 gap-1.5 mb-8">
           {[
             { id: "resumen", label: "Historia Clínica", icon: Stethoscope },
             { id: "vitals", label: "Signos Vitales", icon: Activity },
             { id: "receta", label: "Diagnóstico y Receta", icon: Pill },
+            { id: "examenes", label: "Exámenes", icon: FlaskConical },
             { id: "alergias", label: "Alergias", icon: AlertTriangle },
           ].map((tab) => (
             <TabsTrigger
@@ -487,21 +600,75 @@ export default function ConsultationWorkspace() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
               <Card className="rounded-[2.5rem] border-zinc-100 shadow-sm overflow-hidden bg-white h-full">
-                <CardHeader className="px-8 pt-8 pb-4">
+                <CardHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between gap-3">
                   <CardTitle className="text-lg font-bold text-petroleo">
-                    Diagnóstico Médico
+                    Diagnósticos
                   </CardTitle>
+                  {!isCompleted && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addSecondaryDiagnosis}
+                      className="rounded-xl font-bold shrink-0"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Secundario
+                    </Button>
+                  )}
                 </CardHeader>
-                <CardContent className="px-8 pb-8">
-                  <textarea
-                    placeholder="Código CIE-10 o descripción del diagnóstico (Ej. J02.9 Faringitis Aguda)..."
-                    className="min-h-[150px] resize-none rounded-2xl p-4 bg-zinc-50 border border-zinc-200 focus:outline-none focus:ring-2 focus-visible:ring-celeste w-full"
-                    value={diagnosis}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      setDiagnosis(e.target.value)
-                    }
-                    disabled={isCompleted}
-                  />
+                <CardContent className="px-8 pb-8 space-y-4">
+                  {diagnoses.map((diagnosis, idx) => (
+                    <div
+                      key={`${diagnosis.type}-${idx}`}
+                      className="space-y-2 rounded-2xl border border-zinc-100 bg-zinc-50/60 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`text-[10px] font-black uppercase tracking-widest ${
+                            diagnosis.type === "PRIMARY"
+                              ? "text-emerald-600"
+                              : "text-celeste"
+                          }`}
+                        >
+                          {diagnosis.type === "PRIMARY"
+                            ? "Principal"
+                            : `Secundario ${idx}`}
+                        </span>
+                        {!isCompleted && diagnosis.type === "SECONDARY" && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeDiagnosis(idx)}
+                            className="w-8 h-8 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                            aria-label="Eliminar diagnóstico secundario"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <textarea
+                        placeholder={
+                          diagnosis.type === "PRIMARY"
+                            ? "Ej. J02.9 Faringitis aguda"
+                            : "Código CIE-10 y descripción"
+                        }
+                        className="min-h-[105px] resize-none rounded-xl p-3 bg-white border border-zinc-200 focus:outline-none focus:ring-2 focus-visible:ring-celeste w-full text-sm"
+                        value={diagnosis.value}
+                        onChange={(
+                          e: React.ChangeEvent<HTMLTextAreaElement>,
+                        ) => {
+                          const next = [...diagnoses];
+                          next[idx] = {
+                            ...next[idx],
+                            value: e.target.value,
+                          };
+                          setDiagnoses(next);
+                        }}
+                        disabled={isCompleted}
+                      />
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             </div>
@@ -622,6 +789,162 @@ export default function ConsultationWorkspace() {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        {/* CONTENIDO: EXAMENES */}
+        <TabsContent value="examenes" className="focus-visible:outline-none">
+          <Card className="rounded-[2.5rem] border-zinc-100 shadow-sm overflow-hidden bg-white dark:bg-zinc-950">
+            <CardHeader className="px-8 pt-8 pb-4 flex flex-row items-center justify-between border-b border-zinc-50 pb-6 mb-6">
+              <CardTitle className="text-xl font-bold text-petroleo flex items-center gap-2">
+                <FlaskConical className="w-6 h-6 text-celeste" />
+                Exámenes de Laboratorio e Imágenes
+              </CardTitle>
+              {!isCompleted && (
+                <Button
+                  onClick={addLabOrder}
+                  variant="outline"
+                  className="rounded-xl font-bold border-zinc-200"
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Agregar Examen
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="px-8 pb-8 space-y-4">
+              {labOrders.length === 0 && (
+                <div className="text-center py-10 bg-zinc-50 rounded-2xl border border-dashed border-zinc-200">
+                  <p className="text-zinc-500 font-bold">
+                    No se solicitaron exámenes en esta consulta.
+                  </p>
+                </div>
+              )}
+
+              {labOrders.map((order, idx) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-2xl bg-zinc-50 border border-zinc-100 group transition-all space-y-4"
+                >
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+                    <select
+                      className="h-11 px-4 rounded-xl border border-zinc-200 bg-white font-bold text-sm text-petroleo focus:outline-none focus:ring-2 focus:ring-celeste min-w-[170px]"
+                      value={order.type}
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                        const next = [...labOrders];
+                        next[idx].type = e.target.value;
+                        setLabOrders(next);
+                      }}
+                      disabled={isCompleted}
+                    >
+                      <option value="LABORATORY">Laboratorio</option>
+                      <option value="IMAGE">Imagen</option>
+                    </select>
+
+                    <Input
+                      placeholder="Nombre del examen (Ej. Hemograma completo, Radiografía de tórax)"
+                      className="bg-white flex-1"
+                      value={order.name}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                        const next = [...labOrders];
+                        next[idx].name = e.target.value;
+                        setLabOrders(next);
+                      }}
+                      disabled={isCompleted}
+                    />
+
+                    {isCompleted && (
+                      <span
+                        className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shrink-0 ${
+                          order.status === "COMPLETED"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {order.status === "COMPLETED"
+                          ? "Con resultado"
+                          : "Pendiente"}
+                      </span>
+                    )}
+
+                    {!isCompleted && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeLabOrder(idx)}
+                        className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl opacity-50 group-hover:opacity-100 transition-opacity"
+                        aria-label="Eliminar examen"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {isCompleted && order.resultDetails && (
+                    <div className="rounded-xl border border-emerald-100 bg-white p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                        <p className="text-xs font-black uppercase tracking-widest text-emerald-700">
+                          Resultado registrado
+                        </p>
+                        {order.resultRecordedAt && (
+                          <time className="text-xs font-medium text-zinc-400">
+                            {new Date(order.resultRecordedAt).toLocaleString(
+                              "es-PE",
+                            )}
+                          </time>
+                        )}
+                      </div>
+                      <p className="text-sm text-zinc-700 whitespace-pre-wrap">
+                        {order.resultDetails}
+                      </p>
+                    </div>
+                  )}
+
+                  {isCompleted && order.id && !order.resultDetails && (
+                    <div className="rounded-xl border border-amber-100 bg-white p-4 space-y-3">
+                      <label
+                        htmlFor={`lab-result-${order.id}`}
+                        className="text-xs font-black uppercase tracking-widest text-zinc-500"
+                      >
+                        Resultado del examen
+                      </label>
+                      <textarea
+                        id={`lab-result-${order.id}`}
+                        value={labResultDrafts[order.id] || ""}
+                        onChange={(e) =>
+                          setLabResultDrafts((currentDrafts) => ({
+                            ...currentDrafts,
+                            [order.id as string]: e.target.value,
+                          }))
+                        }
+                        placeholder="Registre hallazgos, valores y conclusiones del examen..."
+                        className="min-h-[110px] resize-y rounded-xl p-3 bg-zinc-50 border border-zinc-200 focus:outline-none focus:ring-2 focus:ring-celeste w-full text-sm"
+                      />
+                      <div className="flex justify-end">
+                        <Button
+                          type="button"
+                          variant="celeste"
+                          onClick={() => handleRecordLabResult(order.id!)}
+                          disabled={
+                            recordLabResultMutation.isPending &&
+                            recordLabResultMutation.variables?.labOrderId ===
+                              order.id
+                          }
+                          className="rounded-xl font-bold"
+                        >
+                          {recordLabResultMutation.isPending &&
+                          recordLabResultMutation.variables?.labOrderId ===
+                            order.id ? (
+                            <Spinner className="w-4 h-4 text-white" />
+                          ) : (
+                            <Save className="w-4 h-4" />
+                          )}
+                          Registrar Resultado
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* CONTENIDO: ALERGIAS */}

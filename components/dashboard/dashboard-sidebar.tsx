@@ -13,7 +13,8 @@ import {
   LayoutDashboard,
   ClipboardList,
   Stethoscope,
-  MapPin
+  MapPin,
+  FileClock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
@@ -57,6 +58,11 @@ const adminItems: SidebarItem[] = [
     title: "Citas Médicas",
     href: "/dashboard/admin/appointments",
     icon: CalendarDays,
+  },
+  {
+    title: "Auditoría",
+    href: "/dashboard/admin/audit",
+    icon: FileClock,
   },
 ];
 
