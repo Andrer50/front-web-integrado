@@ -66,7 +66,10 @@ export class HttpClient {
               config.headers.Authorization = `Bearer ${session.accessToken}`;
             }
           } catch (error) {
-            console.error("Error al obtener la sesión de NextAuth en HttpClient:", error);
+            console.error(
+              "Error al obtener la sesión de NextAuth en HttpClient:",
+              error,
+            );
           }
         }
 
@@ -93,10 +96,18 @@ export class HttpClient {
       },
       async (error) => {
         if (error.response) {
+          const status = error.response.status;
+          const fallbackMessage =
+            status === 401
+              ? "Tu sesión venció o no es válida. Inicia sesión nuevamente."
+              : status === 403
+                ? "No tienes permisos para realizar esta acción."
+                : "Error de red";
+
           return Promise.reject({
-            code: String(error.response.status),
-            message: error.response.data?.message ?? "Error de red",
-            status: error.response.status,
+            code: String(status),
+            message: error.response.data?.message ?? fallbackMessage,
+            status,
           });
         }
 

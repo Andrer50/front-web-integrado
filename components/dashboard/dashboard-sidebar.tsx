@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { 
-  Users, 
-  BriefcaseMedical, 
-  CalendarDays, 
-  FileText, 
+import {
+  Users,
+  BriefcaseMedical,
+  CalendarDays,
+  FileText,
   LogOut,
   SquarePlus,
   LucideIcon,
   LayoutDashboard,
   ClipboardList,
   Stethoscope,
-  MapPin
+  MapPin,
+  FileClock,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Role } from "@/core/shared";
@@ -58,6 +60,16 @@ const adminItems: SidebarItem[] = [
     href: "/dashboard/admin/appointments",
     icon: CalendarDays,
   },
+  {
+    title: "Órdenes y Resultados",
+    href: "/dashboard/admin/lab-results",
+    icon: FlaskConical,
+  },
+  {
+    title: "Auditoría",
+    href: "/dashboard/admin/audit",
+    icon: FileClock,
+  },
 ];
 
 const doctorItems: SidebarItem[] = [
@@ -65,16 +77,6 @@ const doctorItems: SidebarItem[] = [
     title: "Panel Médico",
     href: "/dashboard/doctor",
     icon: LayoutDashboard,
-  },
-  {
-    title: "Mi Agenda",
-    href: "/dashboard/doctor/schedule",
-    icon: CalendarDays,
-  },
-  {
-    title: "Pacientes",
-    href: "/dashboard/doctor/patients",
-    icon: Users,
   },
   {
     title: "Consultas",
@@ -100,9 +102,9 @@ const patientItems: SidebarItem[] = [
     icon: FileText,
   },
   {
-    title: "Mi Salud",
-    href: "/dashboard/patient/health",
-    icon: SquarePlus,
+    title: "Mis Exámenes",
+    href: "/dashboard/patient/lab-results",
+    icon: FlaskConical,
   },
 ];
 
@@ -113,7 +115,12 @@ interface SidebarContentProps {
   onItemClick?: () => void;
 }
 
-function SidebarContent({ role, pathname, filteredItems, onItemClick }: SidebarContentProps) {
+function SidebarContent({
+  role,
+  pathname,
+  filteredItems,
+  onItemClick,
+}: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full bg-blanco-azulado dark:bg-gris-azulado">
       {/* Logo Section */}
@@ -150,12 +157,17 @@ function SidebarContent({ role, pathname, filteredItems, onItemClick }: SidebarC
                 "flex items-center gap-4 px-6 py-4 rounded-xl text-sm font-bold transition-all duration-200 relative group",
                 isActive
                   ? "bg-celeste text-white shadow-lg shadow-blue-200/20 dark:shadow-none"
-                  : "text-petroleo/70 hover:bg-celeste/10 hover:text-petroleo dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white"
+                  : "text-petroleo/70 hover:bg-celeste/10 hover:text-petroleo dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-white",
               )}
             >
-              <item.icon className={cn("w-5 h-5", isActive ? "text-white" : "text-petroleo/70")} />
+              <item.icon
+                className={cn(
+                  "w-5 h-5",
+                  isActive ? "text-white" : "text-petroleo/70",
+                )}
+              />
               {item.title}
-              
+
               {/* Active indicator line on the right */}
               {isActive && (
                 <div className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-1 bg-white rounded-l-full" />
@@ -186,15 +198,23 @@ interface DashboardSidebarProps {
   onMobileOpenChange?: (open: boolean) => void;
 }
 
-export function DashboardSidebar({ role, isMobileOpen, onMobileOpenChange }: DashboardSidebarProps) {
+export function DashboardSidebar({
+  role,
+  isMobileOpen,
+  onMobileOpenChange,
+}: DashboardSidebarProps) {
   const pathname = usePathname();
 
   const getSidebarItems = () => {
     switch (role) {
-      case "ADMIN": return adminItems;
-      case "DOCTOR": return doctorItems;
-      case "PATIENT": return patientItems;
-      default: return [];
+      case "ADMIN":
+        return adminItems;
+      case "DOCTOR":
+        return doctorItems;
+      case "PATIENT":
+        return patientItems;
+      default:
+        return [];
     }
   };
 
@@ -204,16 +224,24 @@ export function DashboardSidebar({ role, isMobileOpen, onMobileOpenChange }: Das
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 bg-blanco-azulado dark:bg-gris-azulado flex flex-col h-screen sticky top-0 transition-all duration-300 border-none shadow-none">
-        <SidebarContent role={role} pathname={pathname} filteredItems={filteredItems} />
+        <SidebarContent
+          role={role}
+          pathname={pathname}
+          filteredItems={filteredItems}
+        />
       </aside>
 
       {/* Mobile Drawer */}
-      <Drawer open={isMobileOpen} onOpenChange={onMobileOpenChange} direction="left">
+      <Drawer
+        open={isMobileOpen}
+        onOpenChange={onMobileOpenChange}
+        direction="left"
+      >
         <DrawerContent className="p-0 border-none h-full bg-blanco-azulado dark:bg-gris-azulado">
-          <SidebarContent 
-            role={role} 
-            pathname={pathname} 
-            filteredItems={filteredItems} 
+          <SidebarContent
+            role={role}
+            pathname={pathname}
+            filteredItems={filteredItems}
             onItemClick={() => onMobileOpenChange?.(false)}
           />
         </DrawerContent>

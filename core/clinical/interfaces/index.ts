@@ -16,6 +16,7 @@ export interface ConsultationResponse {
   vitals?: ConsultationVitalsResponse;
   diagnoses?: ConsultationDiagnosisResponse[];
   prescription?: PrescriptionResponse;
+  labOrders?: LabOrderResponse[];
 }
 
 export interface ConsultationVitalsRequest {
@@ -82,6 +83,39 @@ export interface PrescriptionResponse {
   appointmentTime?: string;
 }
 
+export interface LabOrderRequest {
+  type: string;
+  name: string;
+}
+
+export interface LabOrderResponse {
+  id: string;
+  consultationId: string;
+  patientId: string;
+  patientFirstName?: string;
+  patientLastName?: string;
+  doctorFirstName?: string;
+  doctorLastName?: string;
+  appointmentDate?: string;
+  type: string;
+  name: string;
+  status: string;
+  orderedAt: string;
+  resultDetails?: string;
+  resultRecordedAt?: string;
+}
+
+export interface LabResultRequest {
+  details: string;
+}
+
+export interface LabResultResponse {
+  id: string;
+  labOrderId: string;
+  details: string;
+  recordedAt: string;
+}
+
 export interface AllergyConsultationRequest {
   type: string;
   severity: string;
@@ -91,6 +125,8 @@ export interface CompleteConsultationRequest {
   notes: string;
   vitals?: ConsultationVitalsRequest;
   diagnosis?: ConsultationDiagnosisRequest;
+  diagnoses?: ConsultationDiagnosisRequest[];
   prescription?: PrescriptionRequest;
+  labOrders?: LabOrderRequest[];
   allergies?: AllergyConsultationRequest[];
 }

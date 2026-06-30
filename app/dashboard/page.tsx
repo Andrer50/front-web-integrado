@@ -11,7 +11,12 @@ export default function DashboardRedirect() {
   useEffect(() => {
     if (status === "loading") return;
 
-    const role = (session?.user?.role || "ADMIN").toLowerCase();
+    if (status === "unauthenticated" || session?.error || !session?.user?.role) {
+      router.replace("/authentication/sign-in");
+      return;
+    }
+
+    const role = session.user.role.toLowerCase();
     router.replace(`/dashboard/${role}`);
   }, [session, status, router]);
 
