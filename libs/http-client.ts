@@ -66,7 +66,10 @@ export class HttpClient {
               config.headers.Authorization = `Bearer ${session.accessToken}`;
             }
           } catch (error) {
-            console.error("Error al obtener la sesión de NextAuth en HttpClient:", error);
+            console.error(
+              "Error al obtener la sesión de NextAuth en HttpClient:",
+              error,
+            );
           }
         }
 

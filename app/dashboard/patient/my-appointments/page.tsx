@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
+import { usePatientByUserId } from "@/modules/domain/user/patient/hooks/usePatientByUserId";
 import { ChevronRight, Plus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,12 @@ export default function PatientAppointmentsPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  // 1. Obtener los detalles del Paciente a partir del userId de la sesión
-  const { data: patientData, isLoading: isLoadingPatient } = usePatients(
-    userId ? { userId: String(userId), size: 1 } : {}
+  // 1. Obtener los detalles del Paciente a partir del userId de la sesión directamente
+  const { data: patientData, isLoading: isLoadingPatient } = usePatientByUserId(
+    userId ? String(userId) : undefined,
   );
   
-  const patient = patientData?.data?.content?.[0];
+  const patient = patientData?.data;
   const patientId = patient?.id;
 
   return (

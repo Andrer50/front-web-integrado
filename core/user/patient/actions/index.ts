@@ -147,3 +147,16 @@ export const getPatientMedicalHistoryAction = async (patientId: string) => {
     throw error;
   }
 };
+
+// Obtener un paciente por su userId (cuenta de usuario)
+export const getPatientByUserIdAction = async (userId: string) => {
+  try {
+    const { data } = await apiClient.get<ApiResponse<PatientResponse>>(
+      `/api/v1/patients/user/${userId}`
+    );
+    return data;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+};

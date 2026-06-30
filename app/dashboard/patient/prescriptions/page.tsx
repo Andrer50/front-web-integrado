@@ -1,21 +1,21 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { usePatients } from "@/modules/domain/user/patient/hooks/usePatients";
+import { usePatientByUserId } from "@/modules/domain/user/patient/hooks/usePatientByUserId";
 import { usePatientMedicalHistory } from "@/modules/domain/user/patient/hooks/usePatientMedicalHistory";
-import { 
-  ChevronRight, 
-  Pill, 
-  Search, 
-  CalendarDays, 
-  Stethoscope, 
-  Clock, 
-  FileText, 
+import {
+  ChevronRight,
+  Pill,
+  Search,
+  CalendarDays,
+  Stethoscope,
+  Clock,
+  FileText,
   ArrowUpDown,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState, useMemo } from "react";
@@ -24,18 +24,20 @@ export default function PatientPrescriptionsPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  // 1. Obtener los detalles del Paciente a partir del userId de la sesión
-  const { data: patientData, isLoading: isLoadingPatient } = usePatients(
-    userId ? { userId: String(userId), size: 1 } : {}
+  // 1. Obtener los detalles del Paciente a partir del userId de la sesión directamente
+  const { data: patientData, isLoading: isLoadingPatient } = usePatientByUserId(
+    userId ? String(userId) : undefined,
   );
-  
-  const patient = patientData?.data?.content?.[0];
+
+  const patient = patientData?.data;
   const patientId = patient?.id;
 
   // 2. Obtener el historial médico del paciente (que contiene las recetas)
-  const { data: historyData, isLoading: isLoadingHistory, error } = usePatientMedicalHistory(
-    patientId || ""
-  );
+  const {
+    data: historyData,
+    isLoading: isLoadingHistory,
+    error,
+  } = usePatientMedicalHistory(patientId || "");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [sortBy, setSortBy] = useState<"newest" | "oldest">("newest");
@@ -52,13 +54,19 @@ export default function PatientPrescriptionsPage() {
     if (searchTerm.trim() !== "") {
       const term = searchTerm.toLowerCase();
       result = result.filter((presc) => {
-        const docName = `${presc.doctorFirstName || ""} ${presc.doctorLastName || ""}`.toLowerCase();
+        const docName =
+          `${presc.doctorFirstName || ""} ${presc.doctorLastName || ""}`.toLowerCase();
         const docSpecialty = (presc.doctorSpecialty || "").toLowerCase();
-        const hasMatchingMed = presc.items?.some((item) => 
-          item.medicationName.toLowerCase().includes(term) ||
-          (item.instructions || "").toLowerCase().includes(term)
+        const hasMatchingMed = presc.items?.some(
+          (item) =>
+            item.medicationName.toLowerCase().includes(term) ||
+            (item.instructions || "").toLowerCase().includes(term),
         );
-        return docName.includes(term) || docSpecialty.includes(term) || hasMatchingMed;
+        return (
+          docName.includes(term) ||
+          docSpecialty.includes(term) ||
+          hasMatchingMed
+        );
       });
     }
 
@@ -88,7 +96,8 @@ export default function PatientPrescriptionsPage() {
             Mis recetas médicas
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 mt-2 font-medium">
-            Revisa las recetas emitidas por tus doctores, con las indicaciones de medicamentos y dosis.
+            Revisa las recetas emitidas por tus doctores, con las indicaciones
+            de medicamentos y dosis.
           </p>
         </div>
       </div>
@@ -106,11 +115,13 @@ export default function PatientPrescriptionsPage() {
               className="pl-11 pr-4 py-6 rounded-2xl border-zinc-200 focus-visible:ring-celeste bg-zinc-50/50 dark:bg-zinc-950/50"
             />
           </div>
-          
+
           <div className="flex gap-2 w-full sm:w-auto shrink-0 justify-end">
             <Button
               variant="outline"
-              onClick={() => setSortBy(sortBy === "newest" ? "oldest" : "newest")}
+              onClick={() =>
+                setSortBy(sortBy === "newest" ? "oldest" : "newest")
+              }
               className="rounded-2xl px-5 py-6 font-bold flex items-center gap-2 text-zinc-600 dark:text-zinc-300 border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 hover:text-petroleo"
             >
               <ArrowUpDown className="w-4 h-4 text-celeste" />
@@ -124,21 +135,29 @@ export default function PatientPrescriptionsPage() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center py-24 gap-4">
           <Spinner className="w-12 h-12 text-celeste" />
-          <p className="text-zinc-500 font-bold text-sm">Cargando tus recetas médicas...</p>
+          <p className="text-zinc-500 font-bold text-sm">
+            Cargando tus recetas médicas...
+          </p>
         </div>
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-zinc-950 rounded-[2.5rem] border border-dashed border-red-200 dark:border-red-900/55 p-8 gap-4">
           <AlertCircle className="w-12 h-12 text-red-500" />
-          <h3 className="font-bold text-lg text-petroleo dark:text-white">Error al cargar recetas</h3>
+          <h3 className="font-bold text-lg text-petroleo dark:text-white">
+            Error al cargar recetas
+          </h3>
           <p className="text-zinc-400 text-sm max-w-sm text-center">
-            Hubo un problema al conectar con el servidor médico. Por favor, intenta de nuevo más tarde.
+            Hubo un problema al conectar con el servidor médico. Por favor,
+            intenta de nuevo más tarde.
           </p>
         </div>
       ) : !patientId ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-zinc-950 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800 p-8">
-          <h3 className="font-bold text-lg text-petroleo dark:text-white">No se encontró perfil de paciente</h3>
+          <h3 className="font-bold text-lg text-petroleo dark:text-white">
+            No se encontró perfil de paciente
+          </h3>
           <p className="text-zinc-400 text-sm mt-1 max-w-sm text-center font-medium">
-            No se pudo encontrar un perfil de paciente vinculado a tu cuenta de usuario.
+            No se pudo encontrar un perfil de paciente vinculado a tu cuenta de
+            usuario.
           </p>
         </div>
       ) : prescriptions.length === 0 ? (
@@ -146,36 +165,46 @@ export default function PatientPrescriptionsPage() {
           <div className="w-20 h-20 bg-blanco-azulado dark:bg-zinc-900 rounded-full flex items-center justify-center mb-6">
             <Pill className="w-10 h-10 text-celeste" />
           </div>
-          <h3 className="font-bold text-xl text-petroleo dark:text-white">Aún no tienes recetas médicas</h3>
+          <h3 className="font-bold text-xl text-petroleo dark:text-white">
+            Aún no tienes recetas médicas
+          </h3>
           <p className="text-zinc-400 text-sm mt-2 max-w-md text-center font-medium">
-            Cuando asistas a tus consultas médicas, los doctores registrarán tus recetas y aparecerán automáticamente aquí.
+            Cuando asistas a tus consultas médicas, los doctores registrarán tus
+            recetas y aparecerán automáticamente aquí.
           </p>
         </div>
       ) : filteredPrescriptions.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 bg-white dark:bg-zinc-950 rounded-[2.5rem] border border-dashed border-zinc-200 dark:border-zinc-800 p-8">
-          <h3 className="font-bold text-lg text-petroleo dark:text-white">No se encontraron resultados</h3>
+          <h3 className="font-bold text-lg text-petroleo dark:text-white">
+            No se encontraron resultados
+          </h3>
           <p className="text-zinc-400 text-sm mt-1 max-w-md text-center font-medium">
-            No encontramos recetas que coincidan con la búsqueda: &ldquo;{searchTerm}&rdquo;
+            No encontramos recetas que coincidan con la búsqueda: &ldquo;
+            {searchTerm}&rdquo;
           </p>
         </div>
       ) : (
         <div className="space-y-8">
           {filteredPrescriptions.map((presc) => {
             const issueDateObj = new Date(presc.issueDate);
-            const formattedIssueDate = `${issueDateObj.toLocaleDateString("es-ES", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })} a las ${issueDateObj.toLocaleTimeString("es-ES", {
+            const formattedIssueDate = `${issueDateObj.toLocaleDateString(
+              "es-ES",
+              {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              },
+            )} a las ${issueDateObj.toLocaleTimeString("es-ES", {
               hour: "2-digit",
               minute: "2-digit",
               hour12: false,
             })}`;
 
             // Doctor full name and specialty
-            const doctorName = presc.doctorFirstName && presc.doctorLastName 
-              ? `Dr. ${presc.doctorFirstName} ${presc.doctorLastName}`
-              : "Médico Especialista";
+            const doctorName =
+              presc.doctorFirstName && presc.doctorLastName
+                ? `Dr. ${presc.doctorFirstName} ${presc.doctorLastName}`
+                : "Médico Especialista";
             const specialty = presc.doctorSpecialty || "Medicina General";
 
             // Appointment date and time
@@ -188,15 +217,15 @@ export default function PatientPrescriptionsPage() {
                 month: "long",
                 year: "numeric",
               });
-              const formattedTime = presc.appointmentTime 
-                ? presc.appointmentTime.substring(0, 5) 
+              const formattedTime = presc.appointmentTime
+                ? presc.appointmentTime.substring(0, 5)
                 : "";
               appointmentDetails = `${formattedAppDate} ${formattedTime ? `a las ${formattedTime}` : ""}`;
             }
 
             return (
-              <Card 
-                key={presc.id} 
+              <Card
+                key={presc.id}
                 className="rounded-[2.5rem] border-zinc-100 dark:border-zinc-900 shadow-sm overflow-hidden bg-white dark:bg-zinc-950 hover:shadow-md transition-all duration-300"
               >
                 {/* Cabecera Premium */}
@@ -218,7 +247,10 @@ export default function PatientPrescriptionsPage() {
                         {appointmentDetails && (
                           <p className="text-xs text-zinc-500 dark:text-zinc-400 font-bold flex items-center gap-1.5 mt-1">
                             <CalendarDays className="w-3.5 h-3.5 text-[#64748b]" />
-                            Consulta asociada: <span className="text-petroleo/80 dark:text-zinc-300 font-black capitalize">{appointmentDetails}</span>
+                            Consulta asociada:{" "}
+                            <span className="text-petroleo/80 dark:text-zinc-300 font-black capitalize">
+                              {appointmentDetails}
+                            </span>
                           </p>
                         )}
                       </div>
@@ -273,7 +305,10 @@ export default function PatientPrescriptionsPage() {
                         </thead>
                         <tbody className="divide-y divide-zinc-50 dark:divide-zinc-900">
                           {presc.items?.map((med, mIdx) => (
-                            <tr key={mIdx} className="hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-colors">
+                            <tr
+                              key={mIdx}
+                              className="hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-colors"
+                            >
                               <td className="px-6 py-4.5">
                                 <div className="space-y-1">
                                   <div className="font-extrabold text-petroleo dark:text-white flex items-center gap-2">
