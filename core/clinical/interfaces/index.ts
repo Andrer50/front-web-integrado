@@ -90,6 +90,13 @@ export interface LabOrderRequest {
 
 export interface LabOrderResponse {
   id: string;
+  consultationId: string;
+  patientId: string;
+  patientFirstName?: string;
+  patientLastName?: string;
+  doctorFirstName?: string;
+  doctorLastName?: string;
+  appointmentDate?: string;
   type: string;
   name: string;
   status: string;
