@@ -1,71 +1,83 @@
-# Stage 1: Dependencies
-FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# syntax=docker/dockerfile:1
+
+# ----------------------
+# Etapa base
+# ----------------------
+FROM node:24-alpine AS base
 WORKDIR /app
 
-# Copy package manifests
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+# Desactivar la restricción estricta de scripts de dependencias en pnpm v10+ para entornos de CI/Docker
+ENV pnpm_config_strict_dep_builds=false
 
-# Install dependencies based on lockfile
-RUN \
-    if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-    elif [ -f package-lock.json ]; then npm ci; \
-    else echo "Lockfile not found." && exit 1; \
-    fi
+# Instalar pnpm globalmente
+RUN npm install -g pnpm
 
-# Stage 2: Builder
-FROM node:20-alpine AS builder
-WORKDIR /app
+# ----------------------
+# Etapa de dependencias (Caching)
+# ----------------------
+FROM base AS deps
+
+# Instalar dependencias nativas necesarias para algunas librerías
+RUN apk update && apk add --no-cache python3 make g++ libc6-compat
+
+COPY package.json pnpm-lock.yaml ./
+
+# Instalar dependencias completas para el build
+RUN pnpm install --frozen-lockfile 
+
+# ----------------------
+# Etapa de build (Compilación)
+# ----------------------
+FROM base AS builder
+
+# 1. Copiar package.json y lockfile
+COPY package.json pnpm-lock.yaml ./
+
+# 2. Copiar la carpeta node_modules desde la etapa de dependencias para usar el cache
 COPY --from=deps /app/node_modules ./node_modules
+
+# 3. Copiar el resto del código del proyecto
 COPY . .
 
-# Next.js telemetry disable
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Build arguments passed at build time (Next.js needs them during build for client bundle env vars)
+# Variables de entorno para el build (requeridas por Next.js)
 ARG BACKEND_URL
 ARG BACKEND_AUTH_URL
 ARG NEXTAUTH_URL
 ARG NEXTAUTH_SECRET
 
-ENV BACKEND_URL=$BACKEND_URL
-ENV BACKEND_AUTH_URL=$BACKEND_AUTH_URL
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
-ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV BACKEND_URL=${BACKEND_URL} \
+    BACKEND_AUTH_URL=${BACKEND_AUTH_URL} \
+    NEXTAUTH_URL=${NEXTAUTH_URL} \
+    NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 
-# Build the project
-RUN \
-    if [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm run build; \
-    else npm run build; \
-    fi
+# Re-verificar e instalar los links de pnpm súper rápido usando la caché local
+RUN pnpm install --frozen-lockfile
 
-# Stage 3: Runner
-FROM node:20-alpine AS runner
+# Ejecutar el build de Next.js (crea .next/standalone)
+RUN pnpm build
+
+# ----------------------
+# Etapa de ejecución (Producción - Imagen Ligera)
+# ----------------------
+FROM node:24-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Configuración de variables de entorno de producción
+ENV NODE_ENV=production \
+    HOST=0.0.0.0 \
+    PORT=3000
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Configuración de usuario no-root
+RUN addgroup -S nodejs \
+    && adduser -S nextjs -G nodejs \
+    && chown -R nextjs:nodejs /app
 
-COPY --from=builder /app/public ./public
-
-# Set correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Copia los archivos de ejecución (Optimizados para Next.js Standalone)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 USER nextjs
-
 EXPOSE 3000
 
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
-
-# server.js is created by next build from the standalone output
 CMD ["node", "server.js"]

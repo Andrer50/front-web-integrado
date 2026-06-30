@@ -3,7 +3,7 @@ version: '3.8'
 services:
   front-web:
     build:
-      context: ..
+      context: .
       dockerfile: deploy/Dockerfile
       args:
         - BACKEND_URL=${BACKEND_URL:-http://localhost:8082}
@@ -21,10 +21,8 @@ services:
       - PORT=3000
     volumes:
       - ./logs:/app/logs
-
     networks:
       - ms-net
-
     restart: "no"
 
 networks:
