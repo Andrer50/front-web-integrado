@@ -2,6 +2,7 @@ import * as Yup from "yup";
 
 export const appointmentValidationSchema = (isAdmin: boolean) =>
   Yup.object({
+    slotId: Yup.string().required("Debes seleccionar un horario disponible"),
     reason: Yup.string()
       .min(5, "Describe brevemente el motivo (mínimo 5 caracteres)")
       .required("El motivo de la consulta es obligatorio"),
