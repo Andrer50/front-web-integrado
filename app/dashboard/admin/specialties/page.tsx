@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { CreateSpecialtyDialog } from "@/presentation/dashboard/admin/specialties/create-specialty-dialog";
 import { EditSpecialtyDialog } from "@/presentation/dashboard/admin/specialties/edit-specialty-dialog";
+import { SpecialtyScheduleDialog } from "@/presentation/dashboard/admin/specialties/specialty-schedule-dialog";
 import { useSpecialties } from "@/modules/domain/specialty/hooks/useSpecialties";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
@@ -229,18 +230,21 @@ export default function SpecialtiesPage() {
                     </div>
                   </div>
 
-                  <EditSpecialtyDialog 
-                    specialty={spec}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        className={`w-full mt-4 h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest ${commonStyles.textColor} bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 flex items-center justify-center gap-2 transition-all border border-zinc-100 dark:border-zinc-800`}
-                      >
-                        Ver Detalles
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Button>
-                    }
-                  />
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <SpecialtyScheduleDialog specialty={spec} />
+                    <EditSpecialtyDialog 
+                      specialty={spec}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          className={`w-full h-9 rounded-xl font-bold text-[10px] uppercase tracking-widest ${commonStyles.textColor} bg-zinc-50 hover:bg-zinc-100 dark:bg-zinc-800/50 dark:hover:bg-zinc-800 flex items-center justify-center gap-1 transition-all border border-zinc-100 dark:border-zinc-800 cursor-pointer`}
+                        >
+                          Detalles
+                          <ChevronRight className="w-3 h-3" />
+                        </Button>
+                      }
+                    />
+                  </div>
                 </CardContent>
               </Card>
             ))}

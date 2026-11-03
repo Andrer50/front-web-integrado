@@ -15,6 +15,8 @@ import {
   Lock,
   Phone,
   FileText,
+  KeyRound,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,11 +24,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useCreateDoctor } from "@/modules/domain/doctor/hooks/useCreateDoctor";
 import { useSpecialties } from "@/modules/domain/specialty/hooks/useSpecialties";
 import { doctorSchema } from "@/modules/features/doctor/validations/doctor-schema";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DoctorRequest } from "@/core/doctor/interfaces";
 
 export default function CreateDoctorPage() {
   const router = useRouter();
+  // Stepper a 3 pasos (1: Datos Personales, 2: Especialidad, 3: Credenciales)
   const [step, setStep] = useState(1);
 
   const { data: specialtiesResponse, isLoading: isLoadingSpecialties } =
@@ -63,7 +66,7 @@ export default function CreateDoctorPage() {
   const nextStep = async () => {
     const fieldsToValidate = (
       step === 1
-        ? ["firstName", "lastName", "email", "password", "phone"]
+        ? ["firstName", "lastName", "phone"]
         : ["medicalLicenseNumber", "specialtyIds"]
     ) as (keyof DoctorRequest)[];
 
@@ -91,15 +94,28 @@ export default function CreateDoctorPage() {
     }
   };
 
+  // Nombres de las especialidades seleccionadas para el resumen del Paso 3
+  const selectedSpecialtyNames = useMemo(() => {
+    return specialties
+      .filter((s) => formik.values.specialtyIds.includes(s.id))
+      .map((s) => s.name);
+  }, [specialties, formik.values.specialtyIds]);
+
+  const stepLabels = [
+    { num: 1, title: "Datos Personales", desc: "Nombres y teléfono" },
+    { num: 2, title: "Especialidad", desc: "CMP y áreas médicas" },
+    { num: 3, title: "Credenciales", desc: "Acceso y confirmación" },
+  ];
+
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header */}
+      {/* Header con Indicador de Stepper a 3 Pasos */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <Button
             variant="ghost"
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-zinc-400 hover:text-celeste transition-colors text-sm font-bold mb-2 group"
+            className="flex items-center gap-2 text-zinc-400 hover:text-celeste transition-colors text-sm font-bold mb-2 group cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
             Volver
@@ -108,19 +124,19 @@ export default function CreateDoctorPage() {
             Registrar <span className="text-celeste">Médico</span>
           </h1>
           <p className="text-zinc-500 dark:text-zinc-400 text-sm font-medium">
-            Completa los datos para dar de alta a un nuevo profesional en la
-            plataforma.
+            Completa los datos en 3 sencillos pasos para dar de alta a un profesional.
           </p>
         </div>
 
+        {/* Stepper visual (Paso 1, 2 y 3) */}
         <div className="flex items-center gap-3">
           <div className="flex -space-x-2">
-            {[1, 2].map((i) => (
+            {[1, 2, 3].map((i) => (
               <div
                 key={i}
                 className={`w-10 h-10 rounded-full border-4 border-white dark:border-zinc-950 flex items-center justify-center text-xs font-black transition-all ${
                   step >= i
-                    ? "bg-celeste text-white"
+                    ? "bg-celeste text-white shadow-sm"
                     : "bg-zinc-100 dark:bg-zinc-800 text-zinc-400"
                 }`}
               >
@@ -128,18 +144,59 @@ export default function CreateDoctorPage() {
               </div>
             ))}
           </div>
-          <div className="h-1 w-12 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+          <div className="h-1.5 w-16 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-celeste transition-all duration-500"
-              style={{ width: `${(step / 2) * 100}%` }}
+              style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
         </div>
       </div>
 
+      {/* Barra de progreso de pestañas (Tabs Stepper) */}
+      <div className="grid grid-cols-3 gap-3">
+        {stepLabels.map((s) => (
+          <div
+            key={s.num}
+            onClick={() => {
+              if (s.num < step) setStep(s.num);
+            }}
+            className={`p-4 rounded-2xl border transition-all ${
+              s.num < step ? "cursor-pointer" : ""
+            } ${
+              step === s.num
+                ? "bg-white dark:bg-zinc-900 border-celeste shadow-sm"
+                : step > s.num
+                  ? "bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/40 text-emerald-700"
+                  : "bg-zinc-50 dark:bg-zinc-900/50 border-zinc-200/60 dark:border-zinc-800 opacity-60"
+            }`}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span
+                className={`w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${
+                  step === s.num
+                    ? "bg-celeste text-white"
+                    : step > s.num
+                      ? "bg-emerald-600 text-white"
+                      : "bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
+                }`}
+              >
+                {step > s.num ? "✓" : s.num}
+              </span>
+              <p className="text-xs font-black text-petroleo dark:text-white truncate">
+                {s.title}
+              </p>
+            </div>
+            <p className="text-[11px] text-zinc-400 font-medium hidden sm:block">
+              {s.desc}
+            </p>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={formik.handleSubmit}>
         <div className="relative">
-          {/* Step 1: Información Personal */}
+          {/* PASO 1: DATOS PERSONALES */}
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               <Card className="rounded-[2.5rem] border-none shadow-xl shadow-petroleo/5 bg-white dark:bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
@@ -151,16 +208,16 @@ export default function CreateDoctorPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-black tracking-tight">
-                        Información Personal
+                        Datos Personales
                       </h2>
                       <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-1">
-                        Paso 1 de 2
+                        Paso 1 de 3: Identidad y Contacto
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <CardContent className="p-10">
+                <CardContent className="p-8 md:p-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-3">
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1 flex items-center gap-2">
@@ -214,36 +271,9 @@ export default function CreateDoctorPage() {
                       )}
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-3 md:col-span-2">
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Correo Electrónico
-                      </label>
-                      <Input
-                        name="email"
-                        type="email"
-                        value={formik.values.email}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="juan.perez@ejemplo.com"
-                        startContent={
-                          <Mail className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        }
-                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                          formik.touched.email && formik.errors.email
-                            ? "ring-2 ring-rose-500/50 border-rose-500"
-                            : "focus:ring-celeste/20"
-                        }`}
-                      />
-                      {formik.touched.email && formik.errors.email && (
-                        <p className="text-xs text-rose-500 font-bold ml-1">
-                          {formik.errors.email}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Teléfono
+                        Número de Teléfono / Celular
                       </label>
                       <Input
                         name="phone"
@@ -266,42 +296,15 @@ export default function CreateDoctorPage() {
                         </p>
                       )}
                     </div>
-
-                    <div className="space-y-3 md:col-span-2">
-                      <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Contraseña Provisional
-                      </label>
-                      <Input
-                        name="password"
-                        type="password"
-                        value={formik.values.password}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        placeholder="••••••••"
-                        startContent={
-                          <Lock className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
-                        }
-                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
-                          formik.touched.password && formik.errors.password
-                            ? "ring-2 ring-rose-500/50 border-rose-500"
-                            : "focus:ring-celeste/20"
-                        }`}
-                      />
-                      {formik.touched.password && formik.errors.password && (
-                        <p className="text-xs text-rose-500 font-bold ml-1">
-                          {formik.errors.password}
-                        </p>
-                      )}
-                    </div>
                   </div>
 
                   <div className="mt-12 flex justify-end">
                     <Button
                       type="button"
                       onClick={nextStep}
-                      className="h-14 px-10 bg-celeste hover:bg-celeste/90 text-white rounded-2xl font-black shadow-lg shadow-celeste/20 flex items-center gap-3 transition-all group"
+                      className="h-14 px-10 bg-celeste hover:bg-celeste/90 text-white rounded-2xl font-black shadow-lg shadow-celeste/20 flex items-center gap-3 transition-all group cursor-pointer"
                     >
-                      Continuar
+                      Continuar a Especialidad
                       <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                     </Button>
                   </div>
@@ -310,7 +313,7 @@ export default function CreateDoctorPage() {
             </div>
           )}
 
-          {/* Step 2: Información Profesional */}
+          {/* PASO 2: ESPECIALIDAD Y PERFIL PROFESIONAL */}
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               <Card className="rounded-[2.5rem] border-none shadow-xl shadow-petroleo/5 bg-white dark:bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
@@ -322,27 +325,27 @@ export default function CreateDoctorPage() {
                     </div>
                     <div>
                       <h2 className="text-xl font-black tracking-tight">
-                        Información Profesional
+                        Especialidad y Perfil Profesional
                       </h2>
                       <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-1">
-                        Paso 2 de 2
+                        Paso 2 de 3: Colegiatura y Área Médica
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <CardContent className="p-10 space-y-10">
+                <CardContent className="p-8 md:p-10 space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-3">
+                    <div className="space-y-3 md:col-span-2">
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Número de Colegiatura (CMP)
+                        Número de Colegiatura Médica (CMP)
                       </label>
                       <Input
                         name="medicalLicenseNumber"
                         value={formik.values.medicalLicenseNumber}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        placeholder="Ej. 123456"
+                        placeholder="Ej. CMP-084512"
                         startContent={
                           <FileText className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
                         }
@@ -363,7 +366,7 @@ export default function CreateDoctorPage() {
 
                     <div className="md:col-span-2 space-y-3">
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Especialidades
+                        Selecciona Especialidad(es) Asignada(s)
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {isLoadingSpecialties ? (
@@ -406,15 +409,15 @@ export default function CreateDoctorPage() {
 
                     <div className="md:col-span-2 space-y-3">
                       <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
-                        Biografía Profesional
+                        Biografía / Perfil Profesional
                       </label>
                       <textarea
                         name="bio"
                         value={formik.values.bio}
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
-                        placeholder="Resume la trayectoria y experiencia del médico..."
-                        className={`w-full min-h-[150px] p-6 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-[2rem] font-bold text-sm focus:outline-none focus:ring-2 focus:ring-celeste/20 transition-all resize-none ${
+                        placeholder="Resume la trayectoria, subespecialidades o experiencia clínica del médico..."
+                        className={`w-full min-h-[130px] p-5 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-[1.8rem] font-bold text-sm focus:outline-none focus:ring-2 focus:ring-celeste/20 transition-all resize-none ${
                           formik.touched.bio && formik.errors.bio
                             ? "ring-2 ring-rose-500/50 border-rose-500"
                             : ""
@@ -428,12 +431,144 @@ export default function CreateDoctorPage() {
                     </div>
                   </div>
 
-                  <div className="mt-12 flex items-center justify-between gap-4">
+                  <div className="mt-10 flex items-center justify-between gap-4">
                     <Button
                       type="button"
                       variant="ghost"
                       onClick={prevStep}
-                      className="h-14 px-8 rounded-2xl font-black text-zinc-400 hover:text-petroleo transition-all flex items-center gap-2"
+                      className="h-14 px-8 rounded-2xl font-black text-zinc-400 hover:text-petroleo transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                      Atrás
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={nextStep}
+                      className="h-14 px-10 bg-celeste hover:bg-celeste/90 text-white rounded-2xl font-black shadow-lg shadow-celeste/20 flex items-center gap-3 transition-all group cursor-pointer"
+                    >
+                      Continuar a Credenciales
+                      <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* PASO 3: CREDENCIALES DE ACCESO Y CONFIRMACIÓN */}
+          {step === 3 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <Card className="rounded-[2.5rem] border-none shadow-xl shadow-petroleo/5 bg-white dark:bg-zinc-900/50 backdrop-blur-sm overflow-hidden">
+                <div className="bg-petroleo p-8 text-white relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-celeste/15 rounded-full -mr-32 -mt-32 blur-3xl" />
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md ring-1 ring-white/20">
+                      <KeyRound className="w-7 h-7 text-celeste" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-black tracking-tight">
+                        Credenciales de Acceso
+                      </h2>
+                      <p className="text-white/60 text-xs font-medium uppercase tracking-widest mt-1">
+                        Paso 3 de 3: Cuenta y Activación
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <CardContent className="p-8 md:p-10 space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
+                        Correo Electrónico Institucional
+                      </label>
+                      <Input
+                        name="email"
+                        type="email"
+                        value={formik.values.email}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="dr.garcia@mediconnect.com"
+                        startContent={
+                          <Mail className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.email && formik.errors.email
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
+                      {formik.touched.email && formik.errors.email && (
+                        <p className="text-xs text-rose-500 font-bold ml-1">
+                          {formik.errors.email}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[11px] font-black text-zinc-400 uppercase tracking-widest ml-1">
+                        Contraseña Provisional
+                      </label>
+                      <Input
+                        name="password"
+                        type="password"
+                        value={formik.values.password}
+                        onChange={formik.handleChange}
+                        onBlur={formik.handleBlur}
+                        placeholder="Mínimo 6 caracteres"
+                        startContent={
+                          <Lock className="w-4 h-4 text-zinc-400 group-focus-within:text-celeste transition-colors" />
+                        }
+                        className={`h-14 bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 rounded-2xl font-bold transition-all ${
+                          formik.touched.password && formik.errors.password
+                            ? "ring-2 ring-rose-500/50 border-rose-500"
+                            : "focus:ring-celeste/20"
+                        }`}
+                      />
+                      {formik.touched.password && formik.errors.password && (
+                        <p className="text-xs text-rose-500 font-bold ml-1">
+                          {formik.errors.password}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Resumen de Confirmación Rápido */}
+                  <div className="p-5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 space-y-3">
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-celeste">
+                      <ShieldCheck className="w-4 h-4" />
+                      Resumen del Médico a Registrar
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div>
+                        <p className="text-zinc-400 font-bold">Médico:</p>
+                        <p className="font-black text-petroleo dark:text-white mt-0.5">
+                          {formik.values.firstName || "---"} {formik.values.lastName || "---"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-zinc-400 font-bold">Colegiatura:</p>
+                        <p className="font-black text-petroleo dark:text-white mt-0.5">
+                          {formik.values.medicalLicenseNumber || "---"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-zinc-400 font-bold">Especialidad(es):</p>
+                        <p className="font-black text-celeste mt-0.5 truncate">
+                          {selectedSpecialtyNames.length > 0
+                            ? selectedSpecialtyNames.join(", ")
+                            : "Ninguna seleccionada"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-10 flex items-center justify-between gap-4">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={prevStep}
+                      className="h-14 px-8 rounded-2xl font-black text-zinc-400 hover:text-petroleo transition-all flex items-center gap-2 cursor-pointer"
                     >
                       <ChevronLeft className="w-5 h-5" />
                       Atrás
@@ -441,7 +576,7 @@ export default function CreateDoctorPage() {
                     <Button
                       type="submit"
                       disabled={isPending || !formik.isValid}
-                      className="h-14 px-12 bg-celeste hover:bg-celeste/90 text-white rounded-2xl font-black shadow-lg shadow-celeste/20 flex items-center gap-3 transition-all disabled:opacity-50"
+                      className="h-14 px-12 bg-celeste hover:bg-celeste/90 text-white rounded-2xl font-black shadow-lg shadow-celeste/20 flex items-center gap-3 transition-all disabled:opacity-50 cursor-pointer"
                     >
                       {isPending ? (
                         <Loader2 className="w-6 h-6 animate-spin" />
