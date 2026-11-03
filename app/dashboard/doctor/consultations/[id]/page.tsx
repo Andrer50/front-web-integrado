@@ -26,7 +26,10 @@ import {
   Plus,
   Trash2,
   FlaskConical,
+  CalendarPlus,
+  CalendarCheck,
 } from "lucide-react";
+import { ScheduleControlDialog } from "@/presentation/dashboard/doctor/schedule-control-dialog";
 
 type DiagnosisType = "PRIMARY" | "SECONDARY";
 
@@ -86,6 +89,7 @@ const mapSeverityToUI = (sev: string): string => {
 
 export default function ConsultationWorkspace() {
   const params = useParams();
+  const [isScheduleControlOpen, setIsScheduleControlOpen] = useState(false);
   const router = useRouter();
   const appointmentId = params.id as string;
 
@@ -467,6 +471,17 @@ export default function ConsultationWorkspace() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Botón Secundario de Control con ícono de calendario (Mejora Capítulo V) */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsScheduleControlOpen(true)}
+            className="rounded-xl px-6 py-6 font-bold border-zinc-200 dark:border-zinc-800 hover:bg-zinc-100 dark:hover:bg-zinc-900 text-petroleo dark:text-zinc-200 transition-all text-base gap-2 cursor-pointer shadow-sm"
+          >
+            <CalendarPlus className="w-5 h-5 text-celeste" />
+            Programar control
+          </Button>
+
           {isCompleted ? (
             <div className="flex items-center gap-2 px-6 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-bold border border-emerald-100">
               <CheckCircle2 className="w-5 h-5" />
@@ -477,7 +492,7 @@ export default function ConsultationWorkspace() {
               variant="celeste"
               onClick={handleFinishConsultation}
               disabled={isSaving}
-              className="rounded-xl px-8 py-6 font-bold shadow-md hover:shadow-lg transition-all text-base gap-2"
+              className="rounded-xl px-8 py-6 font-bold shadow-md hover:shadow-lg transition-all text-base gap-2 cursor-pointer"
             >
               {isSaving ? (
                 <Spinner className="w-5 h-5 text-white" />
@@ -785,6 +800,32 @@ export default function ConsultationWorkspace() {
                       disabled={isCompleted}
                     />
                   </div>
+
+                  {/* Sección de Cita de Control Posterior (Mejora Capítulo V) */}
+                  <div className="pt-6 border-t border-zinc-100 dark:border-zinc-900/60 mt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-celeste/10 text-celeste flex items-center justify-center shrink-0">
+                        <CalendarCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-black text-petroleo dark:text-white">
+                          ¿Requiere consulta de control el paciente?
+                        </h4>
+                        <p className="text-xs text-zinc-500 font-medium mt-0.5">
+                          Agenda una cita de seguimiento o revisión de resultados directamente en la agenda.
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsScheduleControlOpen(true)}
+                      className="rounded-xl font-bold border-celeste text-celeste hover:bg-celeste hover:text-white transition-all text-xs gap-2 shrink-0 cursor-pointer"
+                    >
+                      <CalendarPlus className="w-4 h-4" />
+                      Programar control
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -1014,6 +1055,18 @@ export default function ConsultationWorkspace() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Diálogo para agendar Cita de Control (Mejora Capítulo V) */}
+      {appointment && (
+        <ScheduleControlDialog
+          isOpen={isScheduleControlOpen}
+          onOpenChange={setIsScheduleControlOpen}
+          doctorId={appointment.doctorId}
+          doctorName={`${appointment.doctorFirstName} ${appointment.doctorLastName}`}
+          patientId={appointment.patientId}
+          patientName={`${appointment.patientFirstName} ${appointment.patientLastName}`}
+        />
+      )}
     </div>
   );
 }

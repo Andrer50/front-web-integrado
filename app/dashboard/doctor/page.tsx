@@ -39,7 +39,7 @@ export default function DoctorDashboardPage() {
   // 2. Obtener las citas del doctor
   const { data: appointmentsData, isLoading: isLoadingAppointments } =
     useAppointments(
-      currentDoctor?.id ? { doctorId: currentDoctor.id, size: 50, page: 0 } : {}
+      currentDoctor?.id ? { doctorId: currentDoctor.id, size: 100, page: 0 } : {}
     );
 
   const appointmentsList = useMemo(() => {
@@ -55,14 +55,30 @@ export default function DoctorDashboardPage() {
   }, [appointmentsList, todayStr]);
 
   const upcomingPatients = useMemo(() => {
-    // Para próximos pacientes, tomamos los pendientes/confirmados y ordenamos por hora
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    // Para próximos pacientes: solo pendientes o confirmadas cuya fecha NO haya pasado
     return appointmentsList
-      .filter(app => app.status === "PENDING" || app.status === "CONFIRMED")
+      .filter((app) => {
+        const isPendingOrConfirmed =
+          app.status === "PENDING" || app.status === "CONFIRMED";
+        if (!isPendingOrConfirmed) return false;
+
+        // Si la fecha de la cita es anterior a hoy, ya venció y NO debe aparecer en "Próximos Pacientes"
+        if (!app.appointmentDate || app.appointmentDate < todayStr) return false;
+
+        return true;
+      })
       .sort((a, b) => {
-        // Orden simplificado por fecha y hora
-        const dateA = new Date(`${a.appointmentDate}T${a.appointmentTime || "00:00:00"}`);
-        const dateB = new Date(`${b.appointmentDate}T${b.appointmentTime || "00:00:00"}`);
-        return dateA.getTime() - dateB.getTime();
+        // Orden cronológico: la cita más próxima por fecha y hora sale al inicio
+        const timeA = new Date(
+          `${a.appointmentDate}T${a.appointmentTime || "00:00:00"}`
+        ).getTime();
+        const timeB = new Date(
+          `${b.appointmentDate}T${b.appointmentTime || "00:00:00"}`
+        ).getTime();
+        return timeA - timeB;
       })
       .slice(0, 5); // Mostrar los próximos 5
   }, [appointmentsList]);
